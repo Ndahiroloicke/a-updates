@@ -97,6 +97,11 @@ export default function AdvertiserRegistrationForm() {
       if (!response.ok) {
         throw new Error("Registration failed");
       }
+      if(response.status === 400){
+        toast({
+          description:"the user is already an advertiser"
+        })
+      }
 
       if (formData.paymentType !== "free") {
         // Initiate payment

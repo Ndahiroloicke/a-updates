@@ -137,8 +137,8 @@ export default function NewsFeed() {
     return (
       <div className="grid gap-6 md:grid-cols-2">
         {[...Array(6)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <div className="h-48 bg-muted" />
+          <Card key={i} className=" bg-gradient-to-t from-gray-200 to-gray-300 border-none animate-pulse">
+            <div className="h-48" />
             <CardContent className="h-32 mt-4" />
           </Card>
         ))}
@@ -313,10 +313,8 @@ function Post({ post, featured = false }: { post: PostData; featured?: boolean }
           <LikeButton
             postId={post.id}
             initialState={{
-              likes: post._count.likes,
-              isLikedByUser: post.likes?.some(
-                (like) => like.userId === user?.id
-              ),
+              likes: post._count.likes || 0,
+              isLikedByUser: post.likes?.some((like) => like.userId === user?.id) || false,
             }}
           />
         </div>
@@ -327,7 +325,7 @@ function Post({ post, featured = false }: { post: PostData; featured?: boolean }
           className="bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-white transition-colors"
           asChild
         >
-          <Link href={`/article/${post.id}`}>
+          <Link href={`/posts/${post.id}`}>
             Read more <ChevronRight className="ml-1 h-4 w-4" />
           </Link>
         </Button>
@@ -337,9 +335,11 @@ function Post({ post, featured = false }: { post: PostData; featured?: boolean }
         <div className="border-t border-blue-100 dark:border-blue-900/50 p-4">
           <Comments post={post} />
           {!user && (
-            <p className="text-center text-sm text-muted-foreground mt-2">
-              Sign in to leave a comment
-            </p>
+            <div className="text-center p-4 bg-muted/30 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                Please <Link href="/login" className="text-primary hover:underline">sign in</Link> to leave a comment
+              </p>
+            </div>
           )}
         </div>
       )}

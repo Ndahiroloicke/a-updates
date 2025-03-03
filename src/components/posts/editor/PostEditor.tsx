@@ -19,10 +19,11 @@ import CategorySelect from "./CategorySelect";
 import RichTextEditor from "./RichTextEditor";
 import { useRouter } from "next/navigation";
 import RoleSelect from "./RoleSelect";
+import { Category } from "@prisma/client";
 
 export default function PostEditor() {
   const [contentData, setContentData] = useState("")
-  const [category, setCategory] = useState("")
+  const [category, setCategory] = useState<Category | "">("")
   const [Role, setRole] = useState("")
   const [description, setDescription] = useState("")
   const { user } = useSession();
@@ -67,12 +68,12 @@ export default function PostEditor() {
       {
         type: "post",
         input: {
-        title: input,
-        body: contentData,
-        category: category,
-        role: Role,
-        description: description,
-        mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
+          title: input,
+          body: contentData,
+          category: category as Category,
+          role: Role,
+          description: description,
+          mediaIds: attachments.map((a) => a.mediaId).filter(Boolean) as string[],
         }
       },
       {
@@ -120,7 +121,6 @@ export default function PostEditor() {
       {user.displayName === "Admin" && (
         <RoleSelect value={Role} onChange={(value) => setRole(value)}/>
       )}
-
       <div className="my-2 w-full">
         <p className="text-primary text-lg">Short Description</p>
         <textarea name="" id="" className="h-[200px] outline-none p-3 w-full bg-background rounded-2xl" placeholder="Short Description" value={description} onChange={(e) => setDescription(e.target.value)} />
@@ -264,3 +264,4 @@ function AttachmentPreview({
     </div>
   );
 }
+

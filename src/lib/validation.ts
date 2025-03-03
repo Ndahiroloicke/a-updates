@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Category } from "@prisma/client";
 
 const requiredString = z.string().trim().min(1, "Required");
 
@@ -27,6 +28,7 @@ export const createPostSchema = z.object({
   description: requiredString,
   body: z.string().optional(),
   mediaIds: z.array(z.string()).max(5, "Cannot have more than 5 attachments"),
+  category: z.nativeEnum(Category),
 });
 
 export const createStorySchema = z.object({

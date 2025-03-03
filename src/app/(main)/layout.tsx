@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import Link from "next/link";
 import RotatingAdBanner from "@/components/RotatingAdBanner"
 import { Button } from "@/components/ui/button";
+import Footer from "@/components/footer"
 
 export default async function Layout({
   children,
@@ -122,6 +123,7 @@ export default async function Layout({
         </div>
         <div className="mx-auto flex w-full grow gap-5 p-5">{children}</div>
       </div>
+      <Footer />
     </SessionProvider>
   )
 }

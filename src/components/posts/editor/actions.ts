@@ -10,18 +10,20 @@ export async function submitPost(input: {
   description: string;
   body: string;
   mediaIds: string[];
+  category: string;
 }) {
   const { user } = await validateRequest();
 
   if (!user) throw new Error("Unauthorized");
 
-  const { title, description, body, mediaIds } = createPostSchema.parse(input);
+  const { title, description, body, mediaIds, category } = createPostSchema.parse(input);
 
   const newPost = await prisma.post.create({
     data: {
       title,
       description,
       body,
+      category,
       userId: user.id,
       attachments: {
         connect: mediaIds.map((id) => ({ id })),
@@ -89,4 +91,37 @@ export async function submitPoll(input: {
     return newPoll;
   });
   return result;
+}
+
+type AdvertisementInput = {
+  name: string;
+  location: string;
+  type: string;
+  mediaId: string;
+};
+
+export async function submitAdvertisement(input: AdvertisementInput) {
+  const { user } = await validateRequest();
+
+  if (!user) throw new Error("Unauthorized");
+
+  const { name, location, type, mediaId } = input;
+
+  const newAdvertisement = await prisma.advertisement.create({
+    data: {
+      name,
+      location,
+      type,
+      mediaId,
+      userId: user.id,
+      status: "active",
+      // You might want to add additional fields from the registration form here
+    },
+    include: {
+      media: true,
+      user: true,
+    },
+  });
+
+  return newAdvertisement;
 }

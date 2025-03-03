@@ -39,16 +39,29 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
     queryKey: ["latest-posts"],
     queryFn: async () => {
       const response = await kyInstance.get("/api/posts/latest").json<PostsPage>()
-      return response.posts.slice(0, 2) // Get only the first 2 posts
+      // Filter posts to only include those with attachments
+      return response.posts
+        .filter(post => post.attachments?.length > 0)
+        .slice(0, 2) // Get only the first 2 posts with images
     },
   })
 
-  const { data: oldestPosts = [] } = useQuery({
-    queryKey: ["oldest-posts"],
+  // const { data: oldestPosts = [] } = useQuery({
+  //   queryKey: ["oldest-posts"],
+  //   queryFn: async () => {
+  //     const response = await kyInstance.get("/api/posts/oldest").json<PostsPage>()
+  //     return response.posts
+  //   },
+  // })
+
+  const { data: popularPosts = [] } = useQuery({
+    queryKey: ["popular-posts"],
     queryFn: async () => {
       const response = await kyInstance.get("/api/posts/oldest").json<PostsPage>()
-      return response.posts
+      return response // Return the posts array instead of the whole response
     },
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    refetchOnWindowFocus: false
   })
 
   return (
@@ -140,15 +153,19 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
       <div className="bg-card rounded-lg p-4 md:p-6 shadow-sm dark:shadow-none">
         <h3 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Most Popular</h3>
         <div className="space-y-4 md:space-y-6">
-          {oldestPosts.map((post) => (
-            <NewsItem
-              key={post.id}
-              imageSrc={post.attachments?.[0]?.url || "/placeholder.jpg"}
-              title={post.title}
-              description={post.description}
-              date={post.createdAt.toISOString()}
-            />
-          ))}
+          {popularPosts ? (
+            popularPosts.map((post:any) => (
+              <NewsItem
+                key={post.id}
+                imageSrc={post.attachments?.[0]?.url || "/placeholder.jpg"}
+                title={post.title}
+                description={post.description}
+                date={post.createdAt.toISOString()}
+              />
+            ))
+          ) : (
+            <p className="text-muted-foreground text-sm">No popular posts yet</p>
+          )}
         </div>
       </div>
     </div>

@@ -79,7 +79,13 @@ const categories: Category[] = [
     "CELEBRITY",
 ];
 
-const CategorySelect = ({ value, onChange }: { value: any, onChange: (value: any) => void }) => {
+const CategorySelect = ({ 
+  value, 
+  onChange 
+}: { 
+  value: Category | "", 
+  onChange: (value: Category) => void 
+}) => {
 
     const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         onChange(event.target.value as Category);

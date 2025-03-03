@@ -5,6 +5,7 @@ import { CreditCard, Smartphone, DollarSign, ChevronDown } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/components/ui/use-toast"
 import { useSession } from "@/app/(main)/SessionProvider"
+import { useRouter } from "next/navigation"
 
 type FormData = {
   firstName: string
@@ -52,6 +53,7 @@ export default function PublisherRegistrationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const { toast } = useToast()
+  const router = useRouter();
   const { user } = useSession()
 
   const updateFormData = (field: keyof FormData, value: any) => {
@@ -99,12 +101,28 @@ export default function PublisherRegistrationForm() {
     setIsSubmitting(true);
 
     try {
+      // First check if the user already has a publisher profile
+      const checkResponse = await fetch(`/api/publisher/check/${user.id}`);
+      if (!checkResponse.ok) {
+        throw new Error('Failed to check publisher status');
+      }
+      
+      const checkData = await checkResponse.json();
+      
+      if (checkData.exists) {
+        toast({
+          variant: "default",
+          description: "You are already registered as a publisher.",
+        });
+        router.push("/posts/create");
+      }
+
       const response = await fetch("/api/publisher/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          userId: user.id  // Include the user ID in the registration data
+          userId: user.id
         }),
       });
 

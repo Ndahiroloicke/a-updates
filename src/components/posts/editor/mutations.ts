@@ -7,7 +7,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { submitPoll, submitPost, submitStory } from "./actions";
+import { submitPoll, submitPost, submitStory, submitAdvertisement } from "./actions";
 import { Query } from "@tanstack/react-query";
 
 export function useSubmitPostMutation() {
@@ -139,4 +139,15 @@ export function useSubmitStoryMutation() {
   });
 
   return mutation;
+}
+
+export function useSubmitAdvertisementMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: submitAdvertisement,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["advertisements"] });
+    },
+  });
 }
