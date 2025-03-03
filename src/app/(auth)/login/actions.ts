@@ -7,6 +7,7 @@ import { verify } from "@node-rs/argon2"
 import { isRedirectError } from "next/dist/client/components/redirect"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
+import bcrypt from 'bcrypt'
 
 export async function login(credentials: LoginValues): Promise<{ error: string }> {
   try {
@@ -37,14 +38,9 @@ export async function login(credentials: LoginValues): Promise<{ error: string }
       }
     }
 
-    const validPassword = await verify(existingUser.passwordHash, password, {
-      memoryCost: 19456,
-      timeCost: 2,
-      outputLen: 32,
-      parallelism: 1,
-    })
+    const passwordMatch = await bcrypt.compare(password, existingUser.passwordHash)
 
-    if (!validPassword) {
+    if (!passwordMatch) {
       return {
         error: "Incorrect credentials",
       }
