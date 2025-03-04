@@ -24,6 +24,16 @@ export default function Page() {
                 <div className="h-px flex-1 bg-muted dark:bg-gray-600" />
               </div>
               <LoginForm />
+
+              {/* Mobile signup link - only visible on mobile */}
+              <div className="md:hidden text-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-300">
+                  Not registered yet?{" "}
+                  <Link href="/signup" className="text-emerald-500 font-medium hover:text-emerald-600">
+                    Create Account
+                  </Link>
+                </p>
+              </div>
             </div>
           </div>
         </div>
