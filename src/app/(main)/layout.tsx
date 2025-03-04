@@ -79,25 +79,23 @@ export default async function Layout({
       <div className="flex min-h-screen flex-col">
         <Navbar showAdvert={true} />
         <MiniNav />
-        <div className="w-full justify-between flex flex-row gap-8 items-start p-3">
-          <div className="flex-1 max-w-[70%]">
-            {/* Replace static Image with RotatingAdBanner */}
+        <div className="w-full justify-between flex flex-col md:flex-row gap-8 items-start p-3">
+          <div className="flex-1 w-full md:max-w-[70%]">
             <RotatingAdBanner
               ads={ads}
-              rotationInterval={5000} // 30 seconds
+              rotationInterval={5000}
               width={1200}
               height={90}
-             
             />
           </div>
-          <div className="flex flex-col space-y-3 items-center">
-            <div className="text-right space-y-2">
+          <div className="flex flex-col space-y-3 items-center w-full md:w-auto">
+            <div className="text-center md:text-right space-y-2 w-full">
               {user ? (
                 <div className="text-base font-semibold">
                   Username: <span className="text-emerald-500">{user.username}</span>
                 </div>
               ) : (
-                <Link href={"/login"} className="rounded-full bg-primary px-10 py-2 font-bold sm:ms-auto">
+                <Link href={"/login"} className="block w-full md:w-auto rounded-full bg-primary px-10 py-2 font-bold text-center">
                   Login
                 </Link>
               )}
