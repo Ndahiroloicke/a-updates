@@ -1,7 +1,7 @@
 "use client"
 
 import { useInfiniteQuery } from "@tanstack/react-query"
-import { Loader2, MessageCircle, ChevronRight, Calendar, Eye, Heart } from "lucide-react"
+import { Loader2, MessageCircle, ChevronRight, Calendar } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -159,14 +159,14 @@ export default function NewsFeed() {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         {/* Latest Posts Column */}
         {latestPosts.length > 0 && (
-          <div className={`space-y-6 ${topNewsPosts.length === 0 ? "md:col-span-2" : ""}`}>
-            <h2 className="text-2xl font-bold text-primary">Latest Posts</h2>
+          <div className={`space-y-4 md:space-y-6 ${topNewsPosts.length === 0 ? "lg:col-span-2" : ""}`}>
+            <h2 className="text-xl md:text-2xl font-bold text-primary">Latest Posts</h2>
             <InfiniteScrollContainer
-              className="space-y-6"
+              className="space-y-4 md:space-y-6"
               onBottomReached={() => hasNextPage && !isFetching && fetchNextPage()}
             >
               {latestPosts.map((post) => (
@@ -178,9 +178,9 @@ export default function NewsFeed() {
 
         {/* Top News Column */}
         {topNewsPosts.length > 0 && (
-          <div className={`space-y-6 ${latestPosts.length === 0 ? "md:col-span-2" : ""}`}>
-            <h2 className="text-2xl font-bold text-primary">Top News</h2>
-            <div className="space-y-6">
+          <div className={`space-y-4 md:space-y-6 ${latestPosts.length === 0 ? "lg:col-span-2" : ""}`}>
+            <h2 className="text-xl md:text-2xl font-bold text-primary">Top News</h2>
+            <div className="space-y-4 md:space-y-6">
               {paginatedTopNews.map((post) => (
                 <Post key={post.id} post={post} featured={true} />
               ))}
@@ -188,8 +188,8 @@ export default function NewsFeed() {
 
             {/* Enhanced Pagination for Top News */}
             {totalTopNewsPages > 1 && (
-              <Pagination className="mt-6">
-                <PaginationContent>
+              <Pagination className="mt-4 md:mt-6">
+                <PaginationContent className="flex flex-wrap justify-center">
                   <PaginationItem>
                     <PaginationPrevious
                       href="#"
@@ -226,7 +226,7 @@ export default function NewsFeed() {
 
       {/* Loading indicator for infinite scroll */}
       {isFetchingNextPage && (
-        <div className="flex justify-center mt-8">
+        <div className="flex justify-center mt-6 md:mt-8">
           <Loader2 className="animate-spin text-primary" />
         </div>
       )}
@@ -250,14 +250,11 @@ function Post({ post, featured = false }: { post: PostData; featured?: boolean }
   // Generate a random category for visual interest
   const category = post.category || "Not known"
 
-  // Generate random view count for visual interest
-  // const viewCount = post.viewCount || Math.floor(Math.random() * 1000) + 100
-
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-blue-100 dark:border-blue-900 rounded-xl">
       {/* Featured Image with Category Badge */}
       {post.attachments?.[0]?.url && featured && (
-        <div className="relative h-56 w-full overflow-hidden">
+        <div className="relative h-40 sm:h-48 md:h-56 w-full overflow-hidden">
           <Image
             src={post.attachments[0].url || "/placeholder.svg"}
             alt={post.title}
@@ -276,12 +273,12 @@ function Post({ post, featured = false }: { post: PostData; featured?: boolean }
         )}
 
         <div className="flex items-center gap-3 mb-3">
-          <Avatar className="h-10 w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+          <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
             <AvatarImage src={avatarSrc} />
             <AvatarFallback className="bg-primary/20 text-primary font-medium">{avatarFallback}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="text-sm font-medium text-primary">{authorName}</span>
+            <span className="text-xs sm:text-sm font-medium text-primary">{authorName}</span>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
               <span>{formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
@@ -291,24 +288,24 @@ function Post({ post, featured = false }: { post: PostData; featured?: boolean }
 
         <Link
           href={`/article/${post.id}`}
-          className="font-bold text-xl text-slate-800 dark:text-slate-100 hover:text-primary transition-colors line-clamp-2"
+          className="font-bold text-lg sm:text-xl text-slate-800 dark:text-slate-100 hover:text-primary transition-colors line-clamp-2"
         >
           {post.title}
         </Link>
       </CardHeader>
 
-      <CardContent className="py-3">
-        <p className="text-slate-600 dark:text-slate-300 line-clamp-2">{post.description}</p>
+      <CardContent className="py-2 sm:py-3">
+        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 line-clamp-2">{post.description}</p>
       </CardContent>
 
-      <CardFooter className="flex justify-between pt-3 border-t border-blue-100 dark:border-blue-900/50">
-        <div className="flex items-center gap-4">
-          <div 
+      <CardFooter className="flex justify-between pt-2 sm:pt-3 border-t border-blue-100 dark:border-blue-900/50">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div
             className="flex items-center text-primary gap-1.5 cursor-pointer hover:text-primary transition-colors"
             onClick={() => setShowComments(!showComments)}
           >
-            <MessageCircle className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">{post._count.comments}</span>
+            <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+            <span className="text-xs sm:text-sm font-medium">{post._count.comments}</span>
           </div>
           <LikeButton
             postId={post.id}
@@ -322,22 +319,26 @@ function Post({ post, featured = false }: { post: PostData; featured?: boolean }
         <Button
           variant="outline"
           size="sm"
-          className="bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-white transition-colors"
+          className="text-xs sm:text-sm bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-white transition-colors"
           asChild
         >
           <Link href={`/posts/${post.id}`}>
-            Read more <ChevronRight className="ml-1 h-4 w-4" />
+            Read more <ChevronRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
           </Link>
         </Button>
       </CardFooter>
 
       {showComments && (
-        <div className="border-t border-blue-100 dark:border-blue-900/50 p-4">
+        <div className="border-t border-blue-100 dark:border-blue-900/50 p-3 sm:p-4">
           <Comments post={post} />
           {!user && (
-            <div className="text-center p-4 bg-muted/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">
-                Please <Link href="/login" className="text-primary hover:underline">sign in</Link> to leave a comment
+            <div className="text-center p-3 sm:p-4 bg-muted/30 rounded-lg">
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Please{" "}
+                <Link href="/login" className="text-primary hover:underline">
+                  sign in
+                </Link>{" "}
+                to leave a comment
               </p>
             </div>
           )}

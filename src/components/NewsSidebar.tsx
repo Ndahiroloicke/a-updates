@@ -23,11 +23,11 @@ interface NewsSidebarProps {
 
 export default function NewsSidebar({ ads }: NewsSidebarProps) {
   const { user } = useSession()
-  
+
   const { data: suggestedUsers = [] } = useQuery({
     queryKey: ["suggested-users"],
     queryFn: () => kyInstance.get("/api/users/suggested").json<any[]>(),
-    enabled: !!user
+    enabled: !!user,
   })
 
   const { data: stories = [] } = useQuery({
@@ -40,19 +40,9 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
     queryFn: async () => {
       const response = await kyInstance.get("/api/posts/latest").json<PostsPage>()
       // Filter posts to only include those with attachments
-      return response.posts
-        .filter(post => post.attachments?.length > 0)
-        .slice(0, 2) // Get only the first 2 posts with images
+      return response.posts.filter((post) => post.attachments?.length > 0).slice(0, 2) // Get only the first 2 posts with images
     },
   })
-
-  // const { data: oldestPosts = [] } = useQuery({
-  //   queryKey: ["oldest-posts"],
-  //   queryFn: async () => {
-  //     const response = await kyInstance.get("/api/posts/oldest").json<PostsPage>()
-  //     return response.posts
-  //   },
-  // })
 
   const { data: popularPosts = [] } = useQuery({
     queryKey: ["popular-posts"],
@@ -61,15 +51,14 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
       return response // Return the posts array instead of the whole response
     },
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
   })
 
   return (
-    <div className="w-full lg:w-1/3 space-y-6 mt-6 lg:mt-[73px]">
-
-              {/* Advertisement Card */}
-      <div className="bg-card rounded-lg p-4 md:p-6 shadow-sm dark:shadow-none">
-        <h3 className="text-lg md:text-xl font-semibold mb-4">Advertisement</h3>
+    <div className="w-full space-y-4 sm:space-y-6">
+      {/* Advertisement Card */}
+      <div className="bg-card rounded-lg p-3 sm:p-4 md:p-6 shadow-sm dark:shadow-none">
+        <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-3 sm:mb-4">Advertisement</h3>
         <RotatingAdBanner
           ads={ads}
           rotationInterval={8000}
@@ -80,9 +69,9 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
       </div>
 
       {/* Push Card */}
-      <div className="bg-card rounded-lg p-4 md:p-6 shadow-sm dark:shadow-none">
-        <h3 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Push</h3>
-        <div className="space-y-4 md:space-y-6">
+      <div className="bg-card rounded-lg p-3 sm:p-4 md:p-6 shadow-sm dark:shadow-none">
+        <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-3 sm:mb-4 md:mb-6">Push</h3>
+        <div className="space-y-3 sm:space-y-4 md:space-y-6">
           {stories.slice(0, 2).map((story) => (
             <NewsItem
               key={story.id}
@@ -97,22 +86,19 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
 
       {/* Who to Follow Card */}
       {user && suggestedUsers.length > 0 && (
-        <div className="bg-card rounded-lg p-4 md:p-6 shadow-sm dark:shadow-none">
-          <h3 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Who to Follow</h3>
-          <div className="space-y-4 md:space-y-6">
+        <div className="bg-card rounded-lg p-3 sm:p-4 md:p-6 shadow-sm dark:shadow-none">
+          <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-3 sm:mb-4 md:mb-6">Who to Follow</h3>
+          <div className="space-y-3 sm:space-y-4 md:space-y-6">
             {suggestedUsers.slice(0, 3).map((suggestedUser) => (
               <div key={suggestedUser.id} className="flex items-center justify-between gap-3">
                 <UserTooltip user={suggestedUser}>
-                  <Link
-                    href={`/users/${suggestedUser.username}`}
-                    className="flex items-center gap-3"
-                  >
+                  <Link href={`/users/${suggestedUser.username}`} className="flex items-center gap-3">
                     <UserAvatar avatarUrl={suggestedUser.avatarUrl} className="flex-none" />
                     <div>
-                      <p className="line-clamp-1 break-all font-semibold hover:underline">
+                      <p className="line-clamp-1 break-all text-sm sm:text-base font-semibold hover:underline">
                         {suggestedUser.displayName}
                       </p>
-                      <p className="line-clamp-1 break-all text-muted-foreground">
+                      <p className="line-clamp-1 break-all text-xs sm:text-sm text-muted-foreground">
                         @{suggestedUser.username}
                       </p>
                     </div>
@@ -123,7 +109,7 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
                   initialState={{
                     followers: suggestedUser._count.followers,
                     isFollowedByUser: suggestedUser.followers.some(
-                      ({ followerId }: { followerId: string }) => followerId === user.id
+                      ({ followerId }: { followerId: string }) => followerId === user.id,
                     ),
                   }}
                 />
@@ -134,9 +120,9 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
       )}
 
       {/* WhatsUp Card */}
-      <div className="bg-card rounded-lg p-4 md:p-6 shadow-sm dark:shadow-none">
-        <h3 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">WhatsUp</h3>
-        <div className="space-y-4 md:space-y-6">
+      <div className="bg-card rounded-lg p-3 sm:p-4 md:p-6 shadow-sm dark:shadow-none">
+        <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-3 sm:mb-4 md:mb-6">WhatsUp</h3>
+        <div className="space-y-3 sm:space-y-4 md:space-y-6">
           {latestPosts.map((post) => (
             <NewsItem
               key={post.id}
@@ -150,11 +136,11 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
       </div>
 
       {/* Most Popular Card */}
-      <div className="bg-card rounded-lg p-4 md:p-6 shadow-sm dark:shadow-none">
-        <h3 className="text-lg md:text-xl font-semibold mb-4 md:mb-6">Most Popular</h3>
-        <div className="space-y-4 md:space-y-6">
+      <div className="bg-card rounded-lg p-3 sm:p-4 md:p-6 shadow-sm dark:shadow-none">
+        <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-3 sm:mb-4 md:mb-6">Most Popular</h3>
+        <div className="space-y-3 sm:space-y-4 md:space-y-6">
           {popularPosts ? (
-            popularPosts.map((post:any) => (
+            popularPosts.map((post: any) => (
               <NewsItem
                 key={post.id}
                 imageSrc={post.attachments?.[0]?.url || "/placeholder.jpg"}
@@ -164,7 +150,7 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
               />
             ))
           ) : (
-            <p className="text-muted-foreground text-sm">No popular posts yet</p>
+            <p className="text-muted-foreground text-xs sm:text-sm">No popular posts yet</p>
           )}
         </div>
       </div>
@@ -182,22 +168,22 @@ interface NewsItemProps {
 
 function NewsItem({ imageSrc, title, description, alt, date }: NewsItemProps) {
   // Strip HTML tags from description
-  const cleanDescription = description?.replace(/<[^>]*>/g, '') || '';
+  const cleanDescription = description?.replace(/<[^>]*>/g, "") || ""
 
   return (
-    <div className="flex gap-3 md:gap-4">
+    <div className="flex gap-2 sm:gap-3 md:gap-4">
       <div className="flex-shrink-0">
         <Image
-          src={imageSrc}
+          src={imageSrc || "/placeholder.svg"}
           alt={alt || title}
           width={80}
           height={80}
-          className="rounded-lg w-16 h-16 md:w-20 md:h-20 object-cover"
+          className="rounded-lg w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 object-cover"
         />
       </div>
       <div className="min-w-0">
-        <h4 className="font-medium text-base md:text-lg mb-1 line-clamp-2">{title}</h4>
-        <p className="text-muted-foreground text-sm md:text-base line-clamp-2 mb-1">{cleanDescription}</p>
+        <h4 className="font-medium text-sm sm:text-base md:text-lg mb-1 line-clamp-2">{title}</h4>
+        <p className="text-xs sm:text-sm md:text-base text-muted-foreground line-clamp-2 mb-1">{cleanDescription}</p>
         {date && (
           <time className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(date), { addSuffix: true })}
@@ -206,4 +192,5 @@ function NewsItem({ imageSrc, title, description, alt, date }: NewsItemProps) {
       </div>
     </div>
   )
-} 
+}
+
