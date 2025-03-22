@@ -153,7 +153,7 @@ export default function AdvertisementEditor() {
       </div>
 
       {!!attachments.length && (
-        <AttachmentPreviews
+        < AttachmentPreviews
           attachment={attachments[0]}
           removeAttachment={removeAttachment}
         />

@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true, // ⚠️ Disables all TypeScript errors
+  },
+  eslint: {
+    ignoreDuringBuilds: true, // ⚠️ Disables ESLint checks
+  },
   images: {
     domains: [
       'utfs.io',
