@@ -1,0 +1,22 @@
+/* Add these to your global styles */
+.ad-overlay-enter {
+  opacity: 0;
+  height: 0;
+}
+
+.ad-overlay-enter-active {
+  opacity: 1;
+  height: 33vh;
+  transition: opacity 500ms, height 500ms;
+}
+
+.ad-overlay-exit {
+  opacity: 1;
+  height: 33vh;
+}
+
+.ad-overlay-exit-active {
+  opacity: 0;
+  height: 0;
+  transition: opacity 500ms, height 500ms;
+} 
