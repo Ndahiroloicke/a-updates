@@ -1,6 +1,6 @@
+import { validateRequest } from "@/auth";
+import { NextResponse } from "next/server";
 import { StreamChat } from 'stream-chat';
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
 
 const serverClient = StreamChat.getInstance(
     process.env.NEXT_PUBLIC_STREAM_KEY!,
@@ -8,21 +8,23 @@ const serverClient = StreamChat.getInstance(
 );
 
 export async function GET() {
-    const session = await getServerSession(authOptions);
+    try {
+        const { user } = await validateRequest();
+        
+        if (!user) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
 
-    if (!session?.user) {
-        return new Response('Unauthorized', { status: 401 });
+        const token = serverClient.createToken(user.id);
+        return NextResponse.json({ token });
+    } catch (error) {
+        console.error('Error generating stream token:', error);
+        return NextResponse.json(
+            { error: "Failed to generate token" },
+            { status: 500 }
+        );
     }
-
-    const userId = session.user.id;
-    const token = serverClient.createToken(userId);
-
-    return new Response(JSON.stringify({
-        token,
-        userId,
-    }), {
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
 } 
