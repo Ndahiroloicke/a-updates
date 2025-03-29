@@ -46,11 +46,24 @@ interface PollsResponse {
 const ads = [
   {
     id: "1",
-    imageSrc: "/ad1.jpg",
-    link: "https://example.com",
-    alt: "Advertisement"
-  }
+    imageSrc: "/myad.webp",
+    link: "https://example.com/ad1",
+    alt: "Advertisement 1",
+  },
+  {
+    id: "2",
+    imageSrc: "/luka.jpg",
+    link: "",
+    alt: "Special Offer Advertisement",
+  },
+  {
+    id: "3",
+    imageSrc: "/ad2.jpg",
+    link: "",
+    alt: "Limited Time Deal Advertisement",
+  },
 ]
+
 
 export default function ForumPollPage() {
   const { data, fetchNextPage, hasNextPage, isFetching } = useInfiniteQuery({
