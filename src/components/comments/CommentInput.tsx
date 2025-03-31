@@ -1,55 +1,41 @@
-import { PostData } from "@/lib/types";
-import { Loader2, SendHorizonal } from "lucide-react";
-import { useState } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { useSubmitCommentMutation } from "./mutations";
+"use client"
 
-interface CommentInputProps {
-  post: PostData;
-}
+import { useState } from "react"
+import { useQueryClient, useMutation } from "@tanstack/react-query"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import kyInstance from "@/lib/ky"
+import type { PostData } from "@/lib/types"
 
-export default function CommentInput({ post }: CommentInputProps) {
-  const [input, setInput] = useState("");
+export default function CommentInput({ post }: { post: PostData }) {
+  const [content, setContent] = useState("")
+  const queryClient = useQueryClient()
 
-  const mutation = useSubmitCommentMutation(post.id);
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    if (!input) return;
-
-    mutation.mutate(
-      {
-        post,
-        content: input,
-      },
-      {
-        onSuccess: () => setInput(""),
-      },
-    );
-  }
+  const { mutate: submitComment, isPending } = useMutation({
+    mutationFn: async () => {
+      await kyInstance.post(`/api/posts/${post.id}/comments`, { json: { content } }).json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", post.id] })
+      setContent("")
+    },
+  })
 
   return (
-    <form className="flex w-full items-center gap-2" onSubmit={onSubmit}>
-      <Input
+    <div className="space-y-2">
+      <Textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
         placeholder="Write a comment..."
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        autoFocus
+        className="min-h-[100px] text-foreground bg-background resize-none"
       />
       <Button
-        type="submit"
-        variant="ghost"
-        size="icon"
-        disabled={!input.trim() || mutation.isPending}
+        onClick={() => submitComment()}
+        disabled={!content.trim() || isPending}
+        className="bg-primary hover:bg-primary/90 text-white"
       >
-        {!mutation.isPending ? (
-          <SendHorizonal />
-        ) : (
-          <Loader2 className="animate-spin" />
-        )}
+        {isPending ? "Posting..." : "Post Comment"}
       </Button>
-    </form>
-  );
+    </div>
+  )
 }

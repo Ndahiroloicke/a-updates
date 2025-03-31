@@ -8,24 +8,26 @@ import CommentInput from "./CommentInput";
 import { useSession } from "@/app/(main)/SessionProvider";
 
 interface CommentsProps {
-  post: PostData;
+  post?: any;
+  postId?: string;
 }
 
-export default function Comments({ post }: CommentsProps) {
+export default function Comments({ post, postId }: CommentsProps) {
   const { user } = useSession();
+  const id = post?.id || postId;
+
   const { data, fetchNextPage, hasNextPage, isFetching, status } =
     useInfiniteQuery({
-      queryKey: ["comments", post.id],
+      queryKey: ["comments", id],
       queryFn: async ({ pageParam }) => {
         try {
           return await kyInstance
             .get(
-              `/api/posts/${post.id}/comments`,
+              `/api/posts/${id}/comments`,
               pageParam ? { searchParams: { cursor: pageParam } } : {},
             )
             .json<CommentsPage>();
         } catch (error) {
-          // Return empty comments page for unauthorized users
           return { comments: [], previousCursor: null };
         }
       },
@@ -41,18 +43,18 @@ export default function Comments({ post }: CommentsProps) {
 
   return (
     <div className="space-y-3">
-      {user && <CommentInput post={post} />}
+      {user && <CommentInput postId={id} />}
       {hasNextPage && (
         <Button
           variant="link"
-          className="mx-auto block"
+          className="mx-auto block text-primary hover:text-primary/80"
           disabled={isFetching}
           onClick={() => fetchNextPage()}
         >
           Load previous comments
         </Button>
       )}
-      {status === "pending" && <Loader2 className="mx-auto animate-spin" />}
+      {status === "pending" && <Loader2 className="mx-auto animate-spin text-primary h-6 w-6" />}
       {status === "success" && !comments.length && (
         <p className="text-center text-muted-foreground">No comments yet.</p>
       )}

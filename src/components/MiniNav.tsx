@@ -13,7 +13,9 @@ export default function MiniNav() {
 
   const navItems = [
     { label: "Home", href: "/" },
-    {label: "Posts", href: "/home"},
+    { label: "Posts", href: "/home"},
+    { label: "Push Wall", href: "/push-wall" },
+    { label: "Forumn & Poll", href: "/forum-poll" },
     { label: "Africa Map", href: "/africa-map" },
     { label: "Politics", href: "/?category=politics" },
     { label: "Video", href: "/?category=video" },

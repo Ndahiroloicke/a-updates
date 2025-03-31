@@ -1,6 +1,5 @@
 import { PostData } from "@/lib/types";
-import { MoreHorizontal, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Globe } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -8,41 +7,48 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import DeletePostDialog from "./DeletePostDialog";
+
+const LANGUAGES = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Spanish' },
+  { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' },
+  { code: 'it', name: 'Italian' },
+  { code: 'pt', name: 'Portuguese' },
+  { code: 'ru', name: 'Russian' },
+  { code: 'zh', name: 'Chinese' },
+  { code: 'ja', name: 'Japanese' },
+  { code: 'ko', name: 'Korean' },
+];
 
 interface PostMoreButtonProps {
   post: PostData;
   className?: string;
+  onTranslate: (language: string) => void;
 }
 
-export default function PostMoreButton({
-  post,
-  className,
-}: PostMoreButtonProps) {
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
+export default function PostMoreButton({ post, className, onTranslate }: PostMoreButtonProps) {
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button size="icon" variant="ghost" className={className}>
-            <MoreHorizontal className="size-5 text-muted-foreground" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem onClick={() => setShowDeleteDialog(true)}>
-            <span className="flex items-center gap-3 text-destructive">
-              <Trash2 className="size-4" />
-              Delete
-            </span>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={className}
+        >
+          <Globe className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {LANGUAGES.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => onTranslate(lang.code)}
+          >
+            {lang.name}
           </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <DeletePostDialog
-        post={post}
-        open={showDeleteDialog}
-        onClose={() => setShowDeleteDialog(false)}
-      />
-    </>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

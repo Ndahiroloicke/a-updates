@@ -38,13 +38,24 @@ export async function generateMetadata({
   params: { username },
 }: PageProps): Promise<Metadata> {
   const { user: loggedInUser } = await validateRequest();
-
   if (!loggedInUser) return {};
 
   const user = await getUser(username, loggedInUser.id);
 
   return {
     title: `${user.displayName} (@${user.username})`,
+    description: user.bio || `Check out ${user.displayName}'s profile on Africa Updates`,
+    openGraph: {
+      title: `${user.displayName} (@${user.username})`,
+      description: user.bio || `Check out ${user.displayName}'s profile on Africa Updates`,
+      type: 'profile',
+      images: user.avatarUrl ? [{ url: user.avatarUrl }] : [],
+    },
+    twitter: {
+      card: 'summary',
+      title: `${user.displayName} (@${user.username})`,
+      description: user.bio || `Check out ${user.displayName}'s profile on Africa Updates`,
+    }
   };
 }
 

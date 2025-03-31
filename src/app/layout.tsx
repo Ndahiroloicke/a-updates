@@ -61,7 +61,23 @@ export const metadata: Metadata = {
     template: "%s | Africa Updates",
     default: "Africa Updates",
   },
-  description: "The social media app for power nerds",
+  description: "Your trusted source for African news, polls, and discussions",
+  keywords: "Africa, news, polls, discussions, African updates, current events",
+  openGraph: {
+    type: 'website',
+    siteName: 'Africa Updates',
+    locale: 'en_US',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
+  viewport: 'width=device-width, initial-scale=1',
+  themeColor: '#22c55e',
 };
 
 export default function RootLayout({

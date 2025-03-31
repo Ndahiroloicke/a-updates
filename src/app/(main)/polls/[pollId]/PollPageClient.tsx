@@ -4,9 +4,11 @@ import { useQuery } from "@tanstack/react-query"
 import Poll from "@/components/poll-component"
 import { useParams } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
-import { Loader2 } from "lucide-react"
+import { Loader2, Users } from "lucide-react"
 import NewsSidebar from "@/components/NewsSidebar"
 import { useSession } from "@/app/(main)/SessionProvider"
+import { useState } from "react"
+import PostMoreButton from "@/components/posts/PostMoreButton"
 
 // Sample ads for NewsSidebar
 const sidebarAds = [
@@ -28,6 +30,8 @@ export default function PollPageClient() {
   const { pollId } = useParams()
   const { toast } = useToast()
   const { user } = useSession()
+  const [translatedTitle, setTranslatedTitle] = useState("")
+  const [translatedVotes, setTranslatedVotes] = useState("")
   
   const { data: poll, isLoading, refetch } = useQuery({
     queryKey: ["poll", pollId],
@@ -37,6 +41,37 @@ export default function PollPageClient() {
       return response.json()
     }
   })
+
+  const handleTranslate = async (targetLang: string) => {
+    try {
+      // Translate title
+      const titleResponse = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: poll.title,
+          targetLanguage: targetLang,
+        }),
+      })
+      const titleData = await titleResponse.json()
+      setTranslatedTitle(titleData.translatedText)
+
+      // Translate votes text
+      const votesText = `${poll.options.reduce((sum, option) => sum + option._count.votes, 0)} total votes`
+      const votesResponse = await fetch('/api/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: votesText,
+          targetLanguage: targetLang,
+        }),
+      })
+      const votesData = await votesResponse.json()
+      setTranslatedVotes(votesData.translatedText)
+    } catch (error) {
+      console.error('Translation failed:', error)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -70,9 +105,16 @@ export default function PollPageClient() {
         {/* Main Content */}
         <div className="w-full lg:w-2/3">
           <div className="bg-card rounded-lg shadow-sm p-6">
-            <h1 className="text-2xl font-bold mb-6">{poll.title}</h1>
+            <div className="flex justify-between items-start mb-6">
+              <h1 className="text-2xl font-bold">{translatedTitle || poll.title}</h1>
+              <PostMoreButton 
+                post={poll}
+                className="text-primary"
+                onTranslate={handleTranslate}
+              />
+            </div>
             <Poll
-              question={poll.title}
+              question={translatedTitle || poll.title}
               options={formattedOptions}
               userVoted={userVoted}
               onVote={async (optionId) => {
@@ -94,6 +136,12 @@ export default function PollPageClient() {
                 }
               }}
             />
+            <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span>
+                {translatedVotes || `${poll.options.reduce((sum, option) => sum + option._count.votes, 0)} total votes`}
+              </span>
+            </div>
           </div>
         </div>
 

@@ -34,6 +34,18 @@ export async function generateMetadata({
   return {
     title: post.title,
     description: post.description,
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      type: 'article',
+      url: `https://a-updates-alpha.vercel.app/posts/${postId}`,
+      images: post.attachments?.[0]?.url ? [{ url: post.attachments[0].url }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.description,
+    }
   };
 }
 

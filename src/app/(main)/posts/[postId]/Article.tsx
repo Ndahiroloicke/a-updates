@@ -7,13 +7,38 @@ import { formatDistanceToNow } from "date-fns"
 import Image from "next/image"
 import Link from "next/link"
 import { Calendar } from "lucide-react"
-import type { PostData } from "@/lib/types"
-import type { User } from "@prisma/client"
 import LikeButton from "@/components/posts/LikeButton"
 
+// Update the PostData type to include all required fields
+interface PostData {
+  id: string;
+  title: string;
+  description: string;
+  body: string;
+  createdAt: Date;
+  category?: string;
+  user: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+  };
+  attachments?: {
+    url: string;
+  }[];
+  _count: {
+    likes: number;
+  };
+  likes?: {
+    userId: string;
+  }[];
+}
+
 interface ArticleProps {
-  post: PostData
-  currentUser: User | null
+  post: PostData;
+  currentUser: {
+    id: string;
+  } | null;
 }
 
 export default function Article({ post, currentUser }: ArticleProps) {
@@ -22,34 +47,35 @@ export default function Article({ post, currentUser }: ArticleProps) {
   const avatarSrc = post.user.avatarUrl || "/placeholder-user.jpg"
 
   return (
-    <article className="max-w-4xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="space-y-4">
+    <article className="max-w-4xl mx-auto space-y-8" itemScope itemType="https://schema.org/Article">
+      <header className="space-y-4">
+        {/* Author info */}
         <div className="flex items-center gap-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={avatarSrc} />
+            <AvatarImage src={avatarSrc} alt={authorName} />
             <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
           <div>
             <Link 
               href={`/users/${post.user.username}`}
               className="font-medium hover:underline"
+              itemProp="author"
             >
               {authorName}
             </Link>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <time dateTime={post.createdAt.toISOString()}>
+              <time dateTime={post.createdAt.toISOString()} itemProp="datePublished">
                 {formatDistanceToNow(post.createdAt, { addSuffix: true })}
               </time>
             </div>
           </div>
         </div>
-        <h1 className="text-4xl font-bold">{post.title}</h1>
+        <h1 className="text-4xl font-bold" itemProp="headline">{post.title}</h1>
         {post.category && (
-          <Badge variant="secondary">{post.category}</Badge>
+          <Badge variant="secondary" itemProp="articleSection">{post.category}</Badge>
         )}
-      </div>
+      </header>
 
       {/* Featured Image */}
       {post.attachments?.[0]?.url && (
