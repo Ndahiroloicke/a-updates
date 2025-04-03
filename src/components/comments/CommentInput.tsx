@@ -7,16 +7,22 @@ import { Textarea } from "@/components/ui/textarea"
 import kyInstance from "@/lib/ky"
 import type { PostData } from "@/lib/types"
 
-export default function CommentInput({ post }: { post: PostData }) {
+interface CommentInputProps {
+  post?: PostData;
+  postId?: string;
+}
+
+export default function CommentInput({ post, postId }: CommentInputProps) {
   const [content, setContent] = useState("")
   const queryClient = useQueryClient()
+  const id = post?.id || postId
 
   const { mutate: submitComment, isPending } = useMutation({
     mutationFn: async () => {
-      await kyInstance.post(`/api/posts/${post.id}/comments`, { json: { content } }).json()
+      await kyInstance.post(`/api/posts/${id}/comments`, { json: { content } }).json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["comments", post.id] })
+      queryClient.invalidateQueries({ queryKey: ["comments", id] })
       setContent("")
     },
   })
