@@ -14,16 +14,17 @@ export default function MiniNav() {
   const navItems = [
     { label: "Home", href: "/" },
     { label: "Posts", href: "/home"},
-    { label: "Push Wall", href: "/push-wall" },
+    { label: "Africa Wall", href: "/push-wall" },
     { label: "Forumn & Poll", href: "/forum-poll" },
     { label: "Africa Map", href: "/africa-map" },
     { label: "Politics", href: "/?category=politics" },
-    { label: "Video", href: "/?category=video" },
+    { label: "AfroVideo", href: "/?category=video" },
     { label: "Stories", href: "/stories" },
     { label: "Business", href: "/?category=business" },
     { label: "Sports", href: "/?category=sports" },
     { label: "Technology", href: "/?category=technology" },
     { label: "Entertainment", href: "/?category=entertainment" },
+    { label: "Corporate Media Hub", href: "/?category=corporate_media" },
   ]
 
   return (

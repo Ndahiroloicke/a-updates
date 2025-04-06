@@ -42,6 +42,7 @@ const collaboratorContent: CollaboratorContent[] = [
       title: "General Electric",
       description: "Powering Africa's Future",
       imageSrc: "/general.jpg",
+      link: "/corporate-media/general-electric",
       backgroundColor: "bg-blue-500"
     }
   },
@@ -51,7 +52,8 @@ const collaboratorContent: CollaboratorContent[] = [
     content: {
       title: "Medical Kenya",
       description: "Leading Healthcare Innovation",
-      imageSrc: "/medical.png"
+      imageSrc: "/medical.png",
+      link: "/corporate-media/medical-kenya"
     }
   },
   {
@@ -61,15 +63,18 @@ const collaboratorContent: CollaboratorContent[] = [
       title: "MTN",
       description: "Connecting Africa, Empowering Growth",
       imageSrc: "/mtn-mobile-money.jpg",
+      link: "/corporate-media/mtn",
       backgroundColor: "bg-yellow-500"
     }
   },
   {
     id: "5",
-    type: "image",
+    type: "promotion",
     content: {
       title: "SASOL",
-      imageSrc: "/sasol.jpg"
+      description: "Innovating for a Sustainable Future",
+      imageSrc: "/sasol.jpg",
+      link: "/corporate-media/sasol"
     }
   }
 ]
@@ -121,46 +126,52 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
     switch (content.type) {
       case 'image':
         return (
-          <div className="relative h-40 w-full overflow-hidden rounded-lg">
-            <Image
-              src={content.content.imageSrc || '/placeholder.jpg'}
-              alt={content.content.title}
-              fill
-              className="object-cover"
-            />
-          </div>
+          <Link href={content.content.link || "#"}>
+            <div className="relative h-40 w-full overflow-hidden rounded-lg">
+              <Image
+                src={content.content.imageSrc || '/placeholder.jpg'}
+                alt={content.content.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+          </Link>
         )
       
       case 'text':
         return (
-          <div className={`p-6 rounded-lg ${content.content.backgroundColor || 'bg-primary/10'} text-center`}>
-            <h4 className="text-lg font-bold mb-2">{content.content.title}</h4>
-            {content.content.description && (
-              <p className="text-sm opacity-90">{content.content.description}</p>
-            )}
-          </div>
+          <Link href={content.content.link || "#"}>
+            <div className={`p-6 rounded-lg ${content.content.backgroundColor || 'bg-primary/10'} text-center`}>
+              <h4 className="text-lg font-bold mb-2">{content.content.title}</h4>
+              {content.content.description && (
+                <p className="text-sm opacity-90">{content.content.description}</p>
+              )}
+            </div>
+          </Link>
         )
       
       case 'promotion':
         return (
-          <div className="space-y-3">
-            {content.content.imageSrc && (
-              <div className="relative h-32 w-full overflow-hidden rounded-lg">
-                <Image
-                  src={content.content.imageSrc}
-                  alt={content.content.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            )}
-            <div className="text-center">
-              <h4 className="text-lg font-bold mb-1">{content.content.title}</h4>
-              {content.content.description && (
-                <p className="text-sm text-muted-foreground">{content.content.description}</p>
+          <Link href={content.content.link || "#"}>
+            <div className="space-y-3">
+              {content.content.imageSrc && (
+                <div className="relative h-32 w-full overflow-hidden rounded-lg">
+                  <Image
+                    src={content.content.imageSrc}
+                    alt={content.content.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
               )}
+              <div className="text-center">
+                <h4 className="text-lg font-bold mb-1">{content.content.title}</h4>
+                {content.content.description && (
+                  <p className="text-sm text-muted-foreground">{content.content.description}</p>
+                )}
+              </div>
             </div>
-          </div>
+          </Link>
         )
     }
   }

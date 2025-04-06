@@ -80,11 +80,11 @@ export const AdProvider = ({ children }: { children: ReactNode }) => {
   const [adIndex, setAdIndex] = useState(0);
   
   // Temporarily disable ad functionality
-  const isAdSystemEnabled = true;
+  const isAdSystemEnabled = false;
 
   const showAd = (adData: any) => {
     if (!isAdSystemEnabled) return;
-    setCurrentAd(adData);
+    setCurrentAd(adData); 
     setIsAdVisible(true);
   };
 

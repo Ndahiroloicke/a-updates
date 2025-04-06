@@ -52,6 +52,7 @@ enum Category {
   AGRICULTURE
   GAMING
   CELEBRITY
+  CORPORATE_MEDIA
 }
 
 enum MediaType {
