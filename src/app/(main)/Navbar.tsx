@@ -79,7 +79,7 @@ export default async function Navbar({ hideLoginButton = false, showAdvert = fal
               {showAdvert ? (
                 <div className="w-[200px] sm:w-[250px] md:w-[300px]">
                   <RotatingAdBanner
-                    ads={ads}
+                    position="HEADER"
                     rotationInterval={5000}
                     width={300}
                     height={50}

@@ -3,170 +3,73 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import Link from "next/link"
-
-interface Ad {
-  id: string
-  imageSrc: string
-  link: string
-  alt: string
-}
+import { AdPlacement } from "@prisma/client"
 
 interface RotatingAdBannerProps {
-  /**
-   * List of ad images to rotate through
-   */
-  ads?: Ad[]
-
-  /**
-   * Time in milliseconds between ad rotations
-   * @default 30000 (30 seconds)
-   */
+  position: AdPlacement
   rotationInterval?: number
-
-  /**
-   * Width of the ad image
-   * @default 1200
-   */
-  width?: number
-
-  /**
-   * Height of the ad image
-   * @default 90
-   */
-  height?: number
-
-  /**
-   * CSS class names to apply to the container
-   */
   className?: string
-
-  /**
-   * Whether to fetch ads from an external source
-   * @default false
-   */
-  useExternalAds?: boolean
-
-  /**
-   * External ad provider API URL
-   */
-  externalAdApiUrl?: string
 }
 
 export default function RotatingAdBanner({
-  ads = [],
+  position,
   rotationInterval = 30000,
-  width = 1200,
-  height = 90,
   className = "",
-  useExternalAds = false,
-  externalAdApiUrl = "",
 }: RotatingAdBannerProps) {
   const [currentAdIndex, setCurrentAdIndex] = useState(0)
-  const [adList, setAdList] = useState<Ad[]>(ads)
-  const [isLoading, setIsLoading] = useState(useExternalAds)
-  const [error, setError] = useState<string | null>(null)
 
-  // Default ads if none provided or while loading external ads
-  const defaultAds: Ad[] = [
+  // Static advertisement images
+  const staticAds = [
     {
-      id: "1",
-      imageSrc: "/myad.webp",
-      link: "https://example.com/ad1",
-      alt: "Advertisement 1",
+      imageSrc: "/sasol1.jpg",
+      link: "https://www.sasol.com",
+      alt: "Sasol Advertisement",
     },
     {
-      id: "2",
-      imageSrc: "/placeholder.svg?height=90&width=1200&text=Ad+Space+Available",
-      link: "https://example.com/ad2",
-      alt: "Advertisement 2",
+      imageSrc: "/mtn1.jpeg",
+      link: "https://www.mtn.com",
+      alt: "MTN Advertisement",
     },
     {
-      id: "3",
-      imageSrc: "/placeholder.svg?height=90&width=1200&text=Your+Ad+Here",
-      link: "https://example.com/ad3",
-      alt: "Advertisement 3",
+      imageSrc: "/medical1.jpg",
+      link: "https://www.medical.com",
+      alt: "Medical Advertisement",
+    },
+    {
+      imageSrc: "/electric1.jpg",
+      link: "https://www.electric.com",
+      alt: "Electric Advertisement",
     },
   ]
 
-  // Fetch external ads if enabled
   useEffect(() => {
-    if (useExternalAds && externalAdApiUrl) {
-      setIsLoading(true)
-      fetch(externalAdApiUrl)
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error("Failed to fetch ads")
-          }
-          return response.json()
-        })
-        .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setAdList(data)
-          } else {
-            // Fallback to default ads if API returns empty array
-            setAdList(defaultAds)
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching ads:", err)
-          setError("Failed to load advertisements")
-          // Fallback to default ads on error
-          setAdList(defaultAds)
-        })
-        .finally(() => {
-          setIsLoading(false)
-        })
-    } else if (ads.length === 0) {
-      // Use default ads if none provided
-      setAdList(defaultAds)
-    }
-  }, [useExternalAds, externalAdApiUrl, ads])
-
-  // Rotate ads at the specified interval
-  useEffect(() => {
-    if (adList.length <= 1) return
-
     const intervalId = setInterval(() => {
-      setCurrentAdIndex((prevIndex) => (prevIndex + 1) % adList.length)
+      setCurrentAdIndex((prevIndex) => (prevIndex + 1) % staticAds.length)
     }, rotationInterval)
 
     return () => clearInterval(intervalId)
-  }, [adList.length, rotationInterval])
+  }, [rotationInterval])
 
-  // If there are no ads or still loading, show a placeholder
-  if ((adList.length === 0 && !isLoading) || error) {
-    return (
-      <div
-        className={`relative w-full h-[150px] bg-gray-100 dark:bg-gray-800 rounded-md flex items-center justify-center ${className}`}
-      >
-        <p className="text-gray-500 dark:text-gray-400 text-sm">{error || "No advertisements available"}</p>
-      </div>
-    )
-  }
-
-  const currentAd = adList[currentAdIndex] || defaultAds[0]
+  const currentAd = staticAds[currentAdIndex]
 
   return (
     <div className={`relative w-full ${className}`}>
-      {isLoading ? (
-        <div className="w-full h-[100px] bg-gray-100 dark:bg-gray-800 animate-pulse rounded-md" />
-      ) : (
-        <Link href={currentAd.link} target="_blank" rel="noopener noreferrer" className="block">
-          <div className="relative w-full h-[100px] overflow-hidden rounded-md">
+      {/* Fixed aspect ratio container - using 5:1 for a shorter banner-like appearance */}
+      <div className="relative w-full aspect-[5/1]">
+        <Link href={currentAd.link} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+          <div className="absolute inset-0 rounded-md overflow-hidden">
             <Image
-              src={currentAd.imageSrc || "/placeholder.svg"}
+              src={currentAd.imageSrc}
               alt={currentAd.alt}
-              width={width}
-              height={height}
-              className="w-full h-full object-cover object-center transition-opacity duration-500"
+              fill
+              className="object-cover"
               priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             <div className="absolute top-1 right-1 bg-black/30 text-white text-[12px] px-1 rounded">Ad</div>
           </div>
         </Link>
-      )}
-
-    
+      </div>
     </div>
   )
 }

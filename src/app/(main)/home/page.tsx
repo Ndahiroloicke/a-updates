@@ -2,6 +2,7 @@ import { validateRequest } from "@/auth"
 import { redirect } from "next/navigation"
 import AuthenticatedNewsFeed from "@/components/AuthenticatedNewsFeed"
 import NewsSidebar from "@/components/NewsSidebar"
+import PaymentNotification from "@/components/PaymentNotification"
 
 const ads = [
     {
@@ -33,6 +34,7 @@ export default async function HomePage() {
 
   return (
     <main className="flex w-full min-w-0 flex-col lg:flex-row gap-5">
+      <PaymentNotification />
       <div className="w-full min-w-0 flex flex-col lg:flex-row gap-6 space-y-5">
         <div>
           <AuthenticatedNewsFeed />

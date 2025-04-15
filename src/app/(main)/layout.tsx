@@ -82,10 +82,9 @@ export default async function Layout({
         <div className="w-full justify-between flex flex-col md:flex-row gap-8 items-start p-3">
           <div className="flex-1 w-full md:max-w-[70%]">
             <RotatingAdBanner
-              ads={ads}
+              position="IN_FEED"
               rotationInterval={5000}
-              width={1200}
-              height={90}
+              className="w-full rounded-md overflow-hidden"
             />
           </div>
           <div className="flex flex-col space-y-3 items-center w-full md:w-auto">

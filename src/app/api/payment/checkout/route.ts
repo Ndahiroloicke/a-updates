@@ -36,13 +36,14 @@ export async function POST(request: Request) {
         },
       ],
       mode: data.paymentType === 'subscription' ? 'subscription' : 'payment',
-      success_url: `${APP_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${APP_URL}/payment-success?session_id={CHECKOUT_SESSION_ID}&type=${data.isAdvertiser ? 'advertiser' : 'publisher'}`,
       cancel_url: `${APP_URL}/payment-failed`,
       customer_email: loggedInUser.email,
       client_reference_id: loggedInUser.id,
       metadata: {
         userId: loggedInUser.id,
-        paymentType: data.paymentType
+        paymentType: data.paymentType,
+        isAdvertiser: data.isAdvertiser ? 'true' : 'false'
       }
     });
 

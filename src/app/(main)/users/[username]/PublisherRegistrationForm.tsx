@@ -50,8 +50,40 @@ export default function PublisherRegistrationForm() {
 
   async function onSubmit(data: PublisherFormValues) {
     try {
-      // Handle form submission here
-      console.log(data);
+      // Create payment session if not free
+      if (data.paymentType !== "free") {
+        const response = await fetch("/api/payments/create-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            type: "publisher",
+            paymentType: data.paymentType,
+            // Add any other necessary payment details
+          }),
+        });
+
+        const result = await response.json();
+        if (result.url) {
+          window.location.href = result.url;
+          return;
+        }
+      }
+
+      // If free or payment creation failed, submit registration directly
+      const registrationResponse = await fetch("/api/publisher/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!registrationResponse.ok) {
+        throw new Error("Registration failed");
+      }
+
       toast({
         description: "Publisher registration submitted successfully!",
       });

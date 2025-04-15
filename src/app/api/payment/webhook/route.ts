@@ -27,6 +27,7 @@ export async function POST(req: Request) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const userId = session.metadata?.userId || session.client_reference_id;
+        const isAdvertiser = session.metadata?.isAdvertiser === 'true';
         
         if (!userId) {
           throw new Error('No userId found in session metadata or client_reference_id');
@@ -44,14 +45,24 @@ export async function POST(req: Request) {
             },
           });
 
-          // Update user hasPaid status
-          await tx.user.update({
-            where: { id: userId },
-            data: { 
-              hasPaid: true,
-              role: 'PUBLISHER' // Optionally update role to PUBLISHER if needed
-            },
-          });
+          // Update user based on payment type
+          if (isAdvertiser) {
+            await tx.user.update({
+              where: { id: userId },
+              data: { 
+                hasPaid: true,
+                role: 'ADVERTISER'
+              },
+            });
+          } else {
+            await tx.user.update({
+              where: { id: userId },
+              data: { 
+                hasPaid: true,
+                role: 'PUBLISHER'
+              },
+            });
+          }
         });
 
         break;
