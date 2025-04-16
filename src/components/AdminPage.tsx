@@ -38,6 +38,11 @@ import {
   Plus,
   Pencil
 } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { useToast } from "@/components/ui/use-toast";
 
 // Update the User type to match your database schema
 interface User {
@@ -55,17 +60,41 @@ interface User {
 export default function AdminPage({ userInfo }: { userInfo: User }) {
   const router = useRouter()
 
-  const handlePublisherSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      router.push("/publisher-registration")
-    }
-  }
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleAdvertiserSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      router.push("/upload-ad")
+  const handlePayment = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/payment/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userInfo.id }), // Pass the user's ID
+      });
+
+      if (!response.ok) {
+        throw new Error('Payment initiation failed');
+      }
+    
+      const data = await response.json();
+      if (data.url) {
+        window.location.href = data.url; // Redirect to Stripe Checkout
+        return;
+      }
+      
+      toast({
+        variant: "destructive",
+        description: "Failed to initiate payment. Please try again.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description: "An error occurred. Please try again later.",
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background transition-colors duration-300">
@@ -191,7 +220,175 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
               </Button>
             </CardContent>
           </Card>
+       
         </div>
+        {userInfo.role !== "ADMIN" && (
+          <>
+            <div className="space-y-4 md:space-y-6 mt-6 md:mt-8">
+              <h2 className="text-2xl font-bold text-center mb-8">Premium Publishing Features</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Basic Publisher Card */}
+                <Card className="bg-card dark:text-white text-black border-border hover:shadow-xl transition-shadow">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4">Basic Publisher</h3>
+                    <div className="text-2xl font-bold mb-6">$9.99<span className="text-sm font-normal">/month</span></div>
+                    <ul className="space-y-3 mb-6">
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Basic content publishing</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Standard analytics</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Community engagement tools</span>
+                      </li>
+                    </ul>
+                    <Button
+                      className="w-full"
+                      onClick={() => router.push("/publisher-registration?tier=basic")}
+                    >
+                      Get Started
+                    </Button>
+                  </CardContent>
+                </Card>
+  
+                {/* Pro Publisher Card */}
+                <Card className="bg-primary/5 dark:text-white text-black border-primary hover:shadow-xl transition-shadow transform scale-105">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4">Pro Publisher</h3>
+                    <div className="text-2xl font-bold mb-6">$24.99<span className="text-sm font-normal">/month</span></div>
+                    <ul className="space-y-3 mb-6">
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Advanced content publishing</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Premium analytics dashboard</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Corporate Media Hub access</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Priority support</span>
+                      </li>
+                    </ul>
+                    <Button
+                      variant="default"
+                      className="w-full bg-primary hover:bg-primary/90"
+                      onClick={handlePayment}
+                    >
+                      Upgrade to Pro
+                    </Button>
+                  </CardContent>
+                </Card>
+  
+                {/* Enterprise Publisher Card */}
+                <Card className="bg-card dark:text-white text-black border-border hover:shadow-xl transition-shadow">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-4">Enterprise</h3>
+                    <div className="text-2xl font-bold mb-6">Custom</div>
+                    <ul className="space-y-3 mb-6">
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Custom publishing solutions</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Dedicated account manager</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>API access</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Shield className="w-5 h-5 text-green-500 mr-2" />
+                        <span>Custom integrations</span>
+                      </li>
+                    </ul>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => router.push("/publisher-registration?tier=enterprise")}
+                    >
+                      Contact Sales
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+  
+              {/* Contact Form */}
+              <div className="max-w-2xl mx-auto mt-8 space-y-4">
+                <div>
+                  <Label htmlFor="email">Contact Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="w-full"
+                  />
+                </div>
+  
+                <div>
+                  <Label htmlFor="requirements">Additional Requirements</Label>
+                  <Textarea
+                    id="requirements"
+                    placeholder="Describe any specific requirements or questions"
+                    className="w-full h-32"
+                  />
+                </div>
+  
+                <Button
+                  className="w-full md:w-auto"
+                  size="lg"
+                  onClick={() => router.push("/publisher-registration")}
+                >
+                  Submit Request
+                </Button>
+              </div>
+            </div>
+  
+            <div className="space-y-4 md:space-y-6 mt-6 md:mt-8">
+              <h2 className="text-2xl font-bold text-center mb-8">Become an Advertiser</h2>
+              <div className="max-w-2xl mx-auto">
+                <Card className="bg-primary/5 dark:text-white text-black border-primary hover:shadow-xl transition-shadow">
+                  <CardContent className="p-8">
+                    <h3 className="text-2xl font-semibold mb-6 text-center">Advertise With Us</h3>
+                    <div className="text-center mb-8">
+                      <p className="text-lg text-muted-foreground">Reach your target audience effectively</p>
+                    </div>
+                    <ul className="space-y-4 mb-8">
+                      <li className="flex items-center">
+                        <Shield className="w-6 h-6 text-primary mr-3" />
+                        <span className="text-lg">Targeted ad placement across our platform</span>
+                      </li>
+                      <li className="flex items-center">
+                        <BarChart className="w-6 h-6 text-primary mr-3" />
+                        <span className="text-lg">Comprehensive analytics and reporting</span>
+                      </li>
+                      <li className="flex items-center">
+                        <Globe className="w-6 h-6 text-primary mr-3" />
+                        <span className="text-lg">Wide audience reach and engagement</span>
+                      </li>
+                    </ul>
+                    <Button
+                      className="w-full text-lg py-6"
+                      variant="default"
+                      onClick={() => router.push("/advertiser-registration")}
+                    >
+                      Get Started
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Admin Only Section */}
         {userInfo.role === "ADMIN" && (
@@ -324,37 +521,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
         )}
 
         {/* Publisher and Advertiser Section */}
-        <div className="space-y-4 md:space-y-6 mt-6 md:mt-8">
-          <div className="space-y-4">
-            <h2 className="text-lg md:text-xl font-semibold">Publisher</h2>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="publishCheckbox"
-                className="h-4 w-4 rounded border-gray-300"
-                onChange={handlePublisherSelect}
-              />
-              <label htmlFor="publishCheckbox" className="text-xs sm:text-sm">
-                Select if you want to Publish on website, our Corporate Media Hub, or Push wall.
-              </label>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-lg md:text-xl font-semibold">Advertiser</h2>
-            <div className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                id="advertiseCheckbox"
-                className="h-4 w-4 rounded border-gray-300"
-                onChange={handleAdvertiserSelect}
-              />
-              <label htmlFor="advertiseCheckbox" className="text-xs sm:text-sm">
-                Select if you want to advertise on website
-              </label>
-            </div>
-          </div>
-        </div>
+       
       </div>
 
       {/* Mobile Bottom Navigation */}
