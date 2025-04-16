@@ -63,7 +63,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
 
   const handleAdvertiserSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
-      router.push("/advertiser-registration")
+      router.push("/upload-ad")
     }
   }
 

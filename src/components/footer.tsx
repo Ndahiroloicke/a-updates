@@ -147,20 +147,16 @@ const toast = useToast();
           <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm">
             <h4 className="text-sm font-medium text-muted-foreground mb-2">Advertisement</h4>
             <RotatingAdBanner
-              ads={footerAds}
+              position="BELOW_FOOTER"
               rotationInterval={5000}
-              width={300}
-              height={120}
               className="w-full rounded-md overflow-hidden"
             />
           </div>
           <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm">
             <h4 className="text-sm font-medium text-muted-foreground mb-2">Advertisement</h4>
             <RotatingAdBanner
-              ads={footerAds.slice().reverse()}
+              position="BELOW_FOOTER"
               rotationInterval={7000}
-              width={300}
-              height={120}
               className="w-full rounded-md overflow-hidden"
             />
           </div>

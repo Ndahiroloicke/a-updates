@@ -14,12 +14,15 @@ import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import { Calendar, Globe, MessageCircle, ChevronRight } from "lucide-react"
 import Image from "next/image"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import PostMoreButton from "@/components/posts/PostMoreButton"
 import { useSession } from "../SessionProvider"
 import LikeButton from "@/components/posts/LikeButton"
 import Comments from "@/components/comments/Comments"
 import { Button } from "@/components/ui/button"
+import { TranslationProvider } from "@/contexts/TranslationContext"
+import TranslationButton from "@/components/TranslationButton"
+import { useTranslation } from "@/contexts/TranslationContext"
 
 // Import Post component and its interfaces
 interface PostUser {
@@ -59,48 +62,32 @@ interface PostData {
 function Post({ post }: { post: PostData & { isPrioritized?: boolean } }) {
   const { user } = useSession()
   const [showComments, setShowComments] = useState(false)
-  const [isTranslating, setIsTranslating] = useState(false)
-  const [translatedDescription, setTranslatedDescription] = useState("")
-  const [translatedTime, setTranslatedTime] = useState("")
-
+  const { targetLanguage, translatedTexts, translateText } = useTranslation()
+  
   const authorName = post.user.displayName || "Anonymous"
   const avatarFallback = authorName.charAt(0).toUpperCase()
   const avatarSrc = post.user.avatarUrl || "/placeholder-user.jpg"
   const category = post.category || "Not known"
 
-  const handleTranslate = async (targetLang: string) => {
-    setIsTranslating(true)
-    try {
-      // Translate description
-      const descResponse = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: post.description,
-          targetLanguage: targetLang,
-        }),
-      })
-      const descData = await descResponse.json()
-      setTranslatedDescription(descData.translatedText)
-
-      // Translate time
+  useEffect(() => {
+    if (targetLanguage) {
+      // Translate all text elements when language changes
+      translateText(post.description, `desc-${post.id}`)
+      translateText(post.title, `title-${post.id}`)
+      translateText(category, `category-${post.id}`)
+      translateText("Read more", `readmore-${post.id}`)
       const timeText = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })
-      const timeResponse = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: timeText,
-          targetLanguage: targetLang,
-        }),
-      })
-      const timeData = await timeResponse.json()
-      setTranslatedTime(timeData.translatedText)
-    } catch (error) {
-      console.error('Translation failed:', error)
-    } finally {
-      setIsTranslating(false)
+      translateText(timeText, `time-${post.id}`)
+      translateText("Please sign in to leave a comment", `signin-${post.id}`)
     }
-  }
+  }, [targetLanguage, post.id, post.description, post.title, category, post.createdAt])
+
+  const translatedDescription = translatedTexts[`desc-${post.id}`] || post.description
+  const translatedTitle = translatedTexts[`title-${post.id}`] || post.title
+  const translatedCategory = translatedTexts[`category-${post.id}`] || category
+  const translatedReadMore = translatedTexts[`readmore-${post.id}`] || "Read more"
+  const translatedTime = translatedTexts[`time-${post.id}`] || formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })
+  const translatedSignIn = translatedTexts[`signin-${post.id}`] || "Please sign in to leave a comment"
 
   return (
     <Card className={`overflow-hidden transition-all hover:shadow-lg ${
@@ -110,16 +97,15 @@ function Post({ post }: { post: PostData & { isPrioritized?: boolean } }) {
         <div className="relative h-56 w-full overflow-hidden">
           <Image
             src={post.attachments[0].url || "/placeholder.svg"}
-            alt={post.title}
+            alt={translatedTitle}
             fill
             className="object-cover transition-transform hover:scale-105 duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-          <Badge className="absolute top-4 left-4 bg-primary hover:bg-primary/90">{category}</Badge>
+          <Badge className="absolute top-4 left-4 bg-primary hover:bg-primary/90">{translatedCategory}</Badge>
           <PostMoreButton 
             post={post}
             className="absolute top-4 right-4 text-primary"
-            onTranslate={handleTranslate} 
           />
         </div>
       )}
@@ -127,11 +113,10 @@ function Post({ post }: { post: PostData & { isPrioritized?: boolean } }) {
       <CardHeader className="pb-2 relative">
         {!post.attachments?.[0]?.url && (
           <>
-            <Badge className="absolute top-4 left-4 bg-primary hover:bg-primary/90">{category}</Badge>
+            <Badge className="absolute top-4 left-4 bg-primary hover:bg-primary/90">{translatedCategory}</Badge>
             <PostMoreButton 
               post={post}
               className="absolute top-4 right-4 text-primary"
-              onTranslate={handleTranslate} 
             />
           </>
         )}
@@ -145,19 +130,19 @@ function Post({ post }: { post: PostData & { isPrioritized?: boolean } }) {
             <span className="text-sm font-medium text-primary">{authorName}</span>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar className="h-3 w-3" />
-              <span>{translatedTime || formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}</span>
+              <span>{translatedTime}</span>
             </div>
           </div>
         </div>
 
         <Link href={`/posts/${post.id}`} className="font-bold text-xl text-foreground hover:text-primary transition-colors line-clamp-2">
-          {post.title}
+          {translatedTitle}
         </Link>
       </CardHeader>
 
       <CardContent className="py-3">
         <p className="text-muted-foreground line-clamp-2">
-          {translatedDescription || post.description}
+          {translatedDescription}
         </p>
       </CardContent>
 
@@ -186,18 +171,18 @@ function Post({ post }: { post: PostData & { isPrioritized?: boolean } }) {
           asChild
         >
           <Link href={`/posts/${post.id}`}>
-            Read more <ChevronRight className="ml-1 h-4 w-4" />
+            {translatedReadMore} <ChevronRight className="ml-1 h-4 w-4" />
           </Link>
         </Button>
       </CardFooter>
 
       {showComments && (
         <div className="border-t border-border p-4">
-          <Comments postId={post.id} />
+          <Comments postId={post.id} targetLanguage={targetLanguage} />
           {!user && (
             <div className="text-center p-4 bg-muted rounded-lg">
               <p className="text-sm text-muted-foreground">
-                Please <Link href="/login" className="text-primary hover:underline">sign in</Link> to leave a comment
+                {translatedSignIn} <Link href="/login" className="text-primary hover:underline">sign in</Link>
               </p>
             </div>
           )}
@@ -239,7 +224,10 @@ function PushWallContent() {
 
         {/* Main Content - Center */}
         <div className="flex-1">
-          <h1 className="text-2xl font-bold mb-6">Push Wall</h1>
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">Push Wall</h1>
+            <TranslationButton />
+          </div>
           
           {status === "pending" ? (
             <div className="space-y-4">
@@ -277,7 +265,11 @@ function PushWallContent() {
   )
 }
 
-// Update the PushWallPage component to not use SessionProvider
+// Wrap the PushWallPage component with TranslationProvider
 export default function PushWallPage() {
-  return <PushWallContent />
+  return (
+    <TranslationProvider>
+      <PushWallContent />
+    </TranslationProvider>
+  )
 } 

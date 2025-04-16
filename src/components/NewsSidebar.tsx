@@ -14,7 +14,7 @@ import { useSession } from "@/app/(main)/SessionProvider"
 import { useEffect, useState } from "react"
 
 interface NewsSidebarProps {
-  ads: {
+  ads?: {
     id: string
     imageSrc: string
     link: string
@@ -87,7 +87,7 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
   useEffect(() => {
     const visibilityInterval = setInterval(() => {
       setShowCollaborators(prev => !prev)
-    }, 8000) // Show for 8 seconds, hide for 8 seconds
+    }, 8000)
 
     return () => clearInterval(visibilityInterval)
   }, [])
@@ -182,10 +182,8 @@ export default function NewsSidebar({ ads }: NewsSidebarProps) {
       <div className="bg-card rounded-lg p-3 sm:p-4 md:p-6 shadow-sm dark:shadow-none">
         <h3 className="text-base sm:text-lg md:text-xl font-semibold mb-3 sm:mb-4">Advertisement</h3>
         <RotatingAdBanner
-          ads={ads}
+          position="RIGHT_COLUMN_TOP"
           rotationInterval={8000}
-          width={500}
-          height={300}
           className="w-full rounded-md overflow-hidden"
         />
       </div>

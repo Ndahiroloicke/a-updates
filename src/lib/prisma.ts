@@ -1,21 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
-const prismaClientSingleton = () => {
-  return new PrismaClient({
-    datasources: {
-      db: {
-        url: "postgresql://neondb_owner:npg_8Dby7CrnIKPX@ep-plain-darkness-a22pbk2t-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
-      },
-    },
-  });
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined
 };
 
-declare global {
-  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
-}
+const prisma = globalForPrisma.prisma ?? new PrismaClient();
 
-const prisma = globalThis.prisma ?? prismaClientSingleton();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default prisma;
-
-if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma;

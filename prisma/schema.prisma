@@ -75,6 +75,44 @@ enum RequestStatus {
   REJECTED
 }
 
+enum AdRegion {
+  LOCAL
+  MULTI_COUNTRY
+  ALL_AFRICA
+}
+
+enum AdStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REJECTED
+}
+
+enum AdDurationType {
+  MINUTES
+  HOURS
+  DAYS
+  WEEKS
+  MONTHS
+}
+
+enum AdPlacement {
+  RIGHT_COLUMN_TOP
+  RIGHT_COLUMN_MIDDLE
+  RIGHT_COLUMN_BOTTOM
+  BELOW_FOOTER
+  IN_FEED
+  FULL_PAGE_TAKEOVER
+}
+
+enum AdFormat {
+  BANNER
+  SIDEBAR
+  IN_FEED
+  FULL_PAGE
+  MOBILE
+}
+
 model paymentSession {
   id              String   @id @default(cuid())
   userId          String
@@ -83,6 +121,7 @@ model paymentSession {
   paymentMethod   String
   status          String
   user            User     @relation("UserPayments", fields: [userId], references: [id])
+  Advertisement   Advertisement[]
 
   @@index([userId])
 }
@@ -332,18 +371,35 @@ model AdvertiserProfile {
 }
 
 model Advertisement {
-  id        String   @id @default(cuid())
-  name      String
-  location  String
-  type      String
-  status    String   @default("active")
-  mediaId   String
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String         @id @default(cuid())
+  name            String
+  type            String
+  location        String
+  region          AdRegion
+  status          AdStatus
+  startDate       DateTime
+  endDate         DateTime
+  duration        Int
+  durationType    AdDurationType
+  targetUrl       String?
+  dimensions      Json
+  price          Float
+  placement      AdPlacement
+  format         AdFormat
+  isApproved     Boolean       @default(false)
+  isPaid         Boolean       @default(false)
+  virusScanStatus String       @default("pending")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  userId         String
+  mediaId        String
+  user           User          @relation(fields: [userId], references: [id])
+  media          Media         @relation(fields: [mediaId], references: [id])
+  paymentSession paymentSession? @relation(fields: [paymentSessionId], references: [id])
+  paymentSessionId String?
 
-  media Media @relation(fields: [mediaId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  @@index([userId])
+  @@index([mediaId])
 }
 
 model Subscriber {
@@ -404,4 +460,17 @@ model Document {
   post      Post?    @relation(fields: [postId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+
+model AdPricingRule {
+  id           String         @id @default(cuid())
+  region       AdRegion
+  position     String        // e.g., "top", "sidebar", "footer"
+  durationType AdDurationType
+  basePrice    Float
+  multiplier   Float
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }

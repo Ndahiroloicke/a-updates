@@ -71,12 +71,11 @@ body {
     --input: 240 3.7% 15.9%;
     --ring: 142.4 71.8% 29.2%;
   }
-}
 
-@layer base {
   * {
-    @apply border-border;
+    @apply border-[hsl(var(--border))];
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -113,15 +112,6 @@ body {
 
 .str-chat__channel-search-bar-button--exit-search {
   display: none;
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
 }
 
 @layer utilities {

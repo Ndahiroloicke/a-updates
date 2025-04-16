@@ -20,66 +20,41 @@ import { useState } from "react";
 import Link from "next/link";
 import UserTooltip from "../UserTooltip";
 import CommentMoreButton from "./CommentMoreButton";
+import { useTranslation } from "@/contexts/TranslationContext";
+import { useEffect } from "react";
 
 interface CommentProps {
   comment: CommentData;
 }
 
 const LANGUAGES = [
-  { code: 'en', name: 'English' },
-  { code: 'es', name: 'Spanish' },
   { code: 'fr', name: 'French' },
-  { code: 'de', name: 'German' },
-  { code: 'it', name: 'Italian' },
+  { code: 'ar', name: 'Arabic' },
+  { code: 'es', name: 'Spanish' },
   { code: 'pt', name: 'Portuguese' },
-  { code: 'ru', name: 'Russian' },
-  { code: 'zh', name: 'Chinese' },
-  { code: 'ja', name: 'Japanese' },
-  { code: 'ko', name: 'Korean' },
+  { code: 'sw', name: 'Kiswahili' },
+  { code: 'am', name: 'Amharic' },
 ]
 
 export default function Comment({ comment }: CommentProps) {
   const { user } = useSession();
-  const [isTranslating, setIsTranslating] = useState(false)
-  const [translatedContent, setTranslatedContent] = useState("")
-  const [translatedTime, setTranslatedTime] = useState("")
-
-  const handleTranslate = async (targetLang: string) => {
-    setIsTranslating(true)
-    try {
-      // Translate content
-      const contentResponse = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: comment.content,
-          targetLanguage: targetLang,
-        }),
-      })
-      const contentData = await contentResponse.json()
-      setTranslatedContent(contentData.translatedText)
-
-      // Translate time
-      const timeText = formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })
-      const timeResponse = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: timeText,
-          targetLanguage: targetLang,
-        }),
-      })
-      const timeData = await timeResponse.json()
-      setTranslatedTime(timeData.translatedText)
-    } catch (error) {
-      console.error('Translation failed:', error)
-    } finally {
-      setIsTranslating(false)
-    }
-  }
+  const { targetLanguage, translatedTexts, translateText } = useTranslation();
 
   const authorName = comment.user.displayName || "Anonymous"
   const avatarFallback = authorName.charAt(0).toUpperCase()
+
+  useEffect(() => {
+    if (targetLanguage) {
+      // Translate comment content and time
+      translateText(comment.content, `comment-${comment.id}`);
+      const timeText = formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true });
+      translateText(timeText, `comment-time-${comment.id}`);
+    }
+  }, [targetLanguage, comment.id, comment.content, comment.createdAt]);
+
+  const translatedContent = translatedTexts[`comment-${comment.id}`] || comment.content;
+  const translatedTime = translatedTexts[`comment-time-${comment.id}`] || 
+    formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true });
 
   return (
     <div className="py-4">
@@ -97,19 +72,18 @@ export default function Comment({ comment }: CommentProps) {
                 {authorName}
               </span>
               <span className="text-xs text-muted-foreground">
-                {translatedTime || formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                {translatedTime}
               </span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
-              {translatedContent || comment.content}
+              {translatedContent}
             </p>
           </div>
         </div>
         {user && (
           <CommentMoreButton 
             comment={comment}
-            onTranslate={handleTranslate}
-            isTranslating={isTranslating}
+            className="text-muted-foreground hover:text-foreground"
           />
         )}
       </div>

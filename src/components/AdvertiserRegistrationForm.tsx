@@ -74,7 +74,15 @@ export default function AdvertiserRegistrationForm() {
     if (!formData.firstName) newErrors.firstName = "First name is required"
     if (!formData.lastName) newErrors.lastName = "Last name is required"
     if (!formData.workPhone) newErrors.workPhone = "Work phone is required"
+    if (!formData.address) newErrors.address = "Address is required"
+    if (!formData.city) newErrors.city = "City is required"
+    if (!formData.stateProvince) newErrors.stateProvince = "State/Province is required"
+    if (!formData.country) newErrors.country = "Country is required"
+    if (!formData.postalCode) newErrors.postalCode = "Postal code is required"
     if (!formData.organization) newErrors.organization = "Organization name is required"
+    if (!formData.advertisementType) newErrors.advertisementType = "Advertisement type is required"
+    if (formData.advertisementLocation.length === 0) newErrors.advertisementLocation = "At least one location is required"
+    if (!formData.paymentType) newErrors.paymentType = "Payment type is required"
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -82,50 +90,100 @@ export default function AdvertiserRegistrationForm() {
 
   const handleSubmit = async () => {
     if (!validateForm()) {
+      toast({
+        variant: "destructive",
+        description: "Please fill in all required fields",
+      });
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/advertiser/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+      // Map payment type to match API schema
+      const paymentTypeMap = {
+        onetime: "oneTime",
+        subscription: "subscription",
+        free: "free"
+      };
 
-      if (!response.ok) {
-        throw new Error("Registration failed");
-      }
-      if(response.status === 400){
-        toast({
-          description:"the user is already an advertiser"
-        })
-      }
-
+      // Create payment session first if not free
       if (formData.paymentType !== "free") {
-        // Initiate payment
-        const paymentResponse = await fetch("/api/payment/checkout", {
+        const paymentResponse = await fetch("/api/payments/create-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user?.id }),
+          body: JSON.stringify({
+            type: "advertiser",
+            paymentType: paymentTypeMap[formData.paymentType as keyof typeof paymentTypeMap],
+          }),
         });
+
+        if (!paymentResponse.ok) {
+          const error = await paymentResponse.json();
+          throw new Error(error.error || "Payment session creation failed");
+        }
 
         const paymentData = await paymentResponse.json();
         if (paymentData.url) {
-          window.location.href = paymentData.url; // Redirect to Stripe Checkout
+          window.location.href = paymentData.url;
           return;
         }
       }
 
-      toast({
-        description: "Advertiser registration successful!",
+      // If free or payment session creation failed, proceed with registration
+      const response = await fetch("/api/advertiser/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          workPhone: formData.workPhone,
+          cellPhone: formData.cellPhone || undefined,
+          address: formData.address,
+          city: formData.city,
+          stateProvince: formData.stateProvince,
+          country: formData.country,
+          postalCode: formData.postalCode,
+          organization: formData.organization,
+          socialMedia: formData.socialMedia || undefined,
+          advertisementType: formData.advertisementType,
+          advertisementLocation: formData.advertisementLocation,
+          bestTimeToReach: formData.bestTimeToReach || undefined,
+          additionalInfo: formData.additionalInfo || undefined,
+          paymentType: paymentTypeMap[formData.paymentType as keyof typeof paymentTypeMap],
+        }),
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Registration error details:", error);
+        if (response.status === 400 && error.error === "Advertiser profile already exists") {
+          toast({
+            description: "You are already registered as an advertiser.",
+          });
+          // Redirect to ad upload form since they're already registered
+          setTimeout(() => {
+            window.location.href = "/upload-ad";
+          }, 1500);
+          return;
+        }
+        throw new Error(error.error || "Registration failed");
+      }
+
+      toast({
+        description: "Advertiser registration successful! Redirecting to ad upload...",
+      });
+
+      // Redirect to ad upload form after successful registration
+      setTimeout(() => {
+        window.location.href = "/upload-ad";
+      }, 1500);
+
     } catch (error) {
       console.error("Registration error:", error);
       toast({
         variant: "destructive",
-        description: "Failed to register. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to register. Please try again.",
       });
     } finally {
       setIsSubmitting(false);
