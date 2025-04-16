@@ -1,0 +1,232 @@
+/* src/components/posts/editor/editor.css */
+
+/* Modern Editor UI */
+
+.editor-container {
+    @apply rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Top Bar */
+  .editor-header {
+    @apply flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700;
+  }
+  
+  .add-media-button {
+    @apply flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-blue-400;
+  }
+  
+  .view-toggle {
+    @apply flex rounded-lg border border-gray-200 dark:border-gray-700;
+  }
+  
+  .view-toggle button {
+    @apply px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700;
+  }
+  
+  .view-toggle button.active {
+    @apply bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400;
+  }
+  
+  /* Toolbar */
+  .editor-toolbar {
+    @apply flex flex-wrap items-center gap-1 border-b border-gray-200 p-2 dark:border-gray-700;
+  }
+  
+  .format-dropdown {
+    @apply relative;
+  }
+  
+  .format-dropdown-button {
+    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700;
+  }
+  
+  .toolbar-button {
+    @apply rounded-lg p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200;
+  }
+  
+  .toolbar-button.active {
+    @apply bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400;
+  }
+  
+  .toolbar-divider {
+    @apply mx-1 h-6 w-px bg-gray-200 dark:bg-gray-700;
+  }
+  
+  /* Editor Content */
+  .editor-content {
+    @apply flex-1 p-4;
+  }
+  
+  .editor-content .ProseMirror {
+    @apply min-h-[300px] outline-none;
+  }
+  
+  .editor-content .ProseMirror p {
+    @apply mb-4;
+  }
+  
+  .editor-content .ProseMirror ul {
+    @apply list-disc pl-6;
+  }
+  
+  .editor-content .ProseMirror ol {
+    @apply list-decimal pl-6;
+  }
+  
+  /* Code Block Styling */
+  .editor-content .ProseMirror pre {
+    @apply my-4 rounded-md bg-gray-100 p-4 font-mono text-sm dark:bg-gray-800;
+    overflow-x: auto;
+  }
+  
+  /* Link Badge Styling - Updated with more compact design */
+  .editor-content .ProseMirror a.link-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 my-1 mx-1 no-underline;
+    text-decoration: none;
+    max-width: fit-content;
+  }
+  
+  /* Word Count Bar */
+  .editor-footer {
+    @apply flex items-center justify-between border-t border-gray-200 p-4 dark:border-gray-700;
+  }
+  
+  .word-count {
+    @apply flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400;
+  }
+  
+  /* Media Upload */
+  .media-upload-zone {
+    @apply relative overflow-hidden rounded-lg border-2 border-dashed border-gray-200 p-6 transition-all hover:border-green-500;
+  }
+  
+  .media-preview {
+    @apply mt-4 grid gap-4;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .media-item {
+    @apply relative overflow-hidden rounded-lg;
+  }
+  
+  .media-item img,
+  .media-item video {
+    @apply h-full w-full object-cover;
+  }
+  
+  /* Link Editor */
+  .link-editor {
+    @apply flex items-center gap-2 border-b border-gray-200 p-2 dark:border-gray-700;
+  }
+  
+  .link-input {
+    @apply flex-1 rounded-lg border border-gray-200 px-3 py-1 text-sm focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800;
+  }
+  
+  /* Placeholder */
+  .editor-content p.is-editor-empty:first-child::before {
+    @apply pointer-events-none float-left h-0 text-gray-400 content-[attr(data-placeholder)];
+  }
+  
+  /* Fullscreen Mode */
+  .editor-container.fullscreen {
+    @apply fixed inset-0 z-50 rounded-none;
+  }
+  
+  /* Upload Progress */
+  .upload-progress {
+    @apply absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/90;
+  }
+  
+  .upload-progress-bar {
+    @apply h-2 w-48 overflow-hidden rounded-full bg-gray-100;
+  }
+  
+  .upload-progress-fill {
+    @apply h-full bg-green-500 transition-all duration-300;
+  }
+  
+  /* Mobile Responsive */
+  @media (max-width: 640px) {
+    .editor-toolbar {
+      @apply flex-wrap gap-1 p-1;
+    }
+  
+    .toolbar-button {
+      @apply h-9 w-9;
+    }
+  
+    .format-dropdown-button {
+      @apply px-2;
+    }
+  
+    .editor-content {
+      @apply p-4;
+    }
+  }
+  
+  /* Document styles */
+  .document-embed {
+    @apply my-4;
+  }
+  
+  .document-preview {
+    @apply flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-4 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700;
+  }
+  
+  .document-icon {
+    @apply text-2xl;
+  }
+  
+  .document-name {
+    @apply text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+  
+  /* Media Preview Section */
+  .media-preview-section {
+    @apply border-t border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800;
+  }
+  
+  .media-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
+  }
+  
+  .media-preview-item {
+    @apply overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800;
+  }
+  
+  .media-preview-content {
+    @apply flex flex-col;
+  }
+  
+  .media-thumbnail {
+    @apply h-40 w-full bg-gray-100 object-cover dark:bg-gray-700;
+  }
+  
+  .document-thumbnail {
+    @apply flex h-40 w-full items-center justify-center bg-gray-100 dark:bg-gray-700;
+  }
+  
+  .document-thumbnail .document-icon {
+    @apply h-12 w-12 text-gray-400 dark:text-gray-500;
+  }
+  
+  .media-info {
+    @apply border-t border-gray-200 p-3 dark:border-gray-700;
+  }
+  
+  .media-name {
+    @apply mb-2 block truncate text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+  
+  .media-actions {
+    @apply flex items-center gap-2;
+  }
+  
+  .media-action-button {
+    @apply rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200;
+  }
+  

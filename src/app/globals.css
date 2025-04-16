@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @import "~stream-chat-react/dist/css/v2/index.css";
+@import '../styles/embeds.css';
 
 body {
   font-family: var(--font-work-sans), sans-serif;

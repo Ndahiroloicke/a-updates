@@ -58,6 +58,8 @@ enum Category {
 enum MediaType {
   IMAGE
   VIDEO
+  DOCUMENT
+  OTHER
 }
 
 enum NotificationType {
@@ -113,9 +115,9 @@ model User {
   Vote                  Vote[]
   AdvertiserProfile     AdvertiserProfile?
   polls                 Poll[]
+  Advertisement         Advertisement[]
 
   @@map("users")
-  Advertisement Advertisement[]
 }
 
 model Session {
@@ -140,7 +142,7 @@ model Follow {
 model Post {
   id                  String         @id @default(cuid())
   title               String
-  type                String         @default("POST") 
+  type                String         @default("POST")
   description         String
   body                String?
   userId              String
@@ -152,6 +154,7 @@ model Post {
   likes               Like[]
   linkedNotifications Notification[]
   attachments         Media[]
+  documents           Document[]
   user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   poll                Poll?          @relation(fields: [pollId], references: [id])
   pollId              String?        @unique
@@ -178,17 +181,17 @@ model Story {
 }
 
 model Media {
-  id        String    @id @default(cuid())
-  postId    String?
-  type      MediaType
-  url       String
-  createdAt DateTime  @default(now())
-  post      Post?     @relation(fields: [postId], references: [id])
-  Story     Story[]   @relation("StoryThumbnail")
-  storyMedia Story[]  @relation("StoryMedia")
+  id            String          @id @default(cuid())
+  postId        String?
+  type          MediaType
+  url           String
+  createdAt     DateTime        @default(now())
+  post          Post?           @relation(fields: [postId], references: [id])
+  Story         Story[]         @relation("StoryThumbnail")
+  storyMedia    Story[]         @relation("StoryMedia")
+  Advertisement Advertisement[]
 
   @@map("post_media")
-  Advertisement Advertisement[]
 }
 
 model Comment {
@@ -278,26 +281,26 @@ model PublisherRequest {
 
 model PublisherProfile {
   id                    String   @id @default(cuid())
-  userId               String   @unique
-  user                 User     @relation(fields: [userId], references: [id])
-  firstName            String
-  lastName             String
-  workPhone            String
-  cellPhone            String?
-  address              String
-  city                 String
-  stateProvince        String
-  country              String
-  postalCode           String
-  companyName          String
-  socialMedia          String?
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id])
+  firstName             String
+  lastName              String
+  workPhone             String
+  cellPhone             String?
+  address               String
+  city                  String
+  stateProvince         String
+  country               String
+  postalCode            String
+  companyName           String
+  socialMedia           String?
   pressReleaseFrequency String
-  productsOfInterest   String[]
-  bestTimeToReach      String
-  additionalInfo       String?
-  paymentType          String
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  productsOfInterest    String[]
+  bestTimeToReach       String
+  additionalInfo        String?
+  paymentType           String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@map("publisher_profiles")
 }
@@ -315,15 +318,15 @@ model AdvertiserProfile {
   country               String
   postalCode            String
   organization          String
-  socialMedia          String?
+  socialMedia           String?
   advertisementType     String
   advertisementLocation String[]
-  bestTimeToReach      String?
-  additionalInfo       String?
-  paymentType          String
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-  user                 User     @relation(fields: [userId], references: [id])
+  bestTimeToReach       String?
+  additionalInfo        String?
+  paymentType           String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id])
 
   @@map("advertiser_profiles")
 }
@@ -339,8 +342,8 @@ model Advertisement {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  media     Media     @relation(fields: [mediaId], references: [id])
-  user      User      @relation(fields: [userId], references: [id])
+  media Media @relation(fields: [mediaId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
 }
 
 model Subscriber {
@@ -360,10 +363,10 @@ model Poll {
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   options     Option[]
-  post        Post?    
+  post        Post?
 
-  @@map("polls")
   @@index([userId])
+  @@map("polls")
 }
 
 model Option {
@@ -374,8 +377,8 @@ model Option {
   poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
   votes     Vote[]
 
-  @@map("poll_options")
   @@index([pollId])
+  @@map("poll_options")
 }
 
 model Vote {
@@ -386,8 +389,19 @@ model Vote {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   option    Option   @relation(fields: [optionId], references: [id], onDelete: Cascade)
 
-  @@map("votes")
   @@unique([userId, optionId])
   @@index([userId])
   @@index([optionId])
+  @@map("votes")
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  name      String
+  url       String
+  type      String // "pdf", "doc", "docx"
+  postId    String?
+  post      Post?    @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
