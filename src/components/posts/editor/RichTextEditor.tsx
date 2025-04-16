@@ -75,10 +75,7 @@ const RichTextEditor = ({
   const [readingTime, setReadingTime] = useState("0");
   const [showLinkMenu, setShowLinkMenu] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPreview, setIsPreview] = useState(false);
-  const [uploadedMedia, setUploadedMedia] = useState([]);
 
   const editor = useEditor({
     extensions,
@@ -95,68 +92,6 @@ const RichTextEditor = ({
     },
   });
 
-  const handleFileUpload = async (file: File) => {
-    console.log("Document upload started:", file.name);
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await fetch("/api/upload-document", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Document upload failed");
-      }
-
-      const data = await response.json();
-      console.log("Document upload response:", data);
-
-      // Create a unique ID for the document
-      const documentId = Date.now();
-
-      // Create the new document item
-      const newDocumentItem = {
-        id: documentId,
-        type: "document",
-        name: file.name,
-        url: data.url,
-        thumbnail: data.thumbnail || data.url,
-      };
-
-      console.log("Adding new document item:", newDocumentItem);
-
-      // Add the document to the uploadedMedia state immediately
-      setUploadedMedia((prevMedia) => {
-        console.log("Previous media:", prevMedia);
-        const updatedMedia = [...prevMedia, newDocumentItem];
-        console.log("Updated media:", updatedMedia);
-        return updatedMedia;
-      });
-
-      // Insert the document into the editor
-      const documentHtml = `
-        <div class="document-embed">
-          <a 
-            href="${data.url}" 
-            class="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-blue-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-blue-400"
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            <span class="text-lg">📄</span>
-            ${file.name}
-          </a>
-        </div>
-      `;
-      editor?.chain().focus().insertContent(documentHtml).run();
-
-      setSelectedFile(null);
-    } catch (error) {
-      console.error("Error uploading document:", error);
-    }
-  };
-
   const handleLinkSubmit = () => {
     if (linkUrl) {
       // Insert a simple underlined clickable link on a single line
@@ -166,16 +101,6 @@ const RichTextEditor = ({
       setShowLinkMenu(false);
     }
   };
-
-  const removeMedia = (id: number) => {
-    const newMedia = uploadedMedia.filter((media) => media.id !== id);
-    setUploadedMedia(newMedia);
-  };
-
-  // Add a useEffect to log the uploadedMedia state when it changes
-  useEffect(() => {
-    console.log("uploadedMedia state updated:", uploadedMedia);
-  }, [uploadedMedia]);
 
   if (!editor) {
     return null;

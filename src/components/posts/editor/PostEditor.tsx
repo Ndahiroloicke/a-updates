@@ -128,7 +128,7 @@ export default function PostEditor() {
       const documentLink = `
         <div class="document-embed">
           <a href="${documentUrl}" target="_blank" rel="noopener noreferrer">
-            <div class="document-preview">
+            <div class="document-pre\ew">
               <div class="document-icon">📄</div>
               <div class="document-name">${documentName}</div>
             </div>
