@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TextStyle from "@tiptap/extension-text-style";
-import Underline from "@tiptap/extension-underline";
-import TextAlign from "@tiptap/extension-text-align";
-import Link from "@tiptap/extension-link";
-import Image from "@tiptap/extension-image";
-import CodeBlock from "@tiptap/extension-code-block";
+import { useState } from "react"
+import { useEditor, EditorContent } from "@tiptap/react"
+import StarterKit from "@tiptap/starter-kit"
+import TextStyle from "@tiptap/extension-text-style"
+import Underline from "@tiptap/extension-underline"
+import TextAlign from "@tiptap/extension-text-align"
+import Link from "@tiptap/extension-link"
+import Image from "@tiptap/extension-image"
+import CodeBlock from "@tiptap/extension-code-block"
 import {
   FaBold,
   FaItalic,
@@ -21,9 +21,9 @@ import {
   FaList,
   FaListOl,
   FaChevronDown,
-} from "react-icons/fa";
-import "./editor.css";
-import { Code } from "lucide-react";
+} from "react-icons/fa"
+import "./editor.css"
+import { Code, Heading1, Heading2, Heading3 } from "lucide-react"
 
 const extensions = [
   StarterKit.configure({
@@ -62,48 +62,48 @@ const extensions = [
       class: "rounded-md bg-gray-100 p-4 font-mono text-sm dark:bg-gray-800",
     },
   }),
-];
+]
 
 const RichTextEditor = ({
   value,
   onChange,
 }: {
-  value: string;
-  onChange: (value: string) => void;
+  value: string
+  onChange: (value: string) => void
 }) => {
-  const [wordCount, setWordCount] = useState(0);
-  const [readingTime, setReadingTime] = useState("0");
-  const [showLinkMenu, setShowLinkMenu] = useState(false);
-  const [linkUrl, setLinkUrl] = useState("");
-  const [isPreview, setIsPreview] = useState(false);
+  const [wordCount, setWordCount] = useState(0)
+  const [readingTime, setReadingTime] = useState("0")
+  const [showLinkMenu, setShowLinkMenu] = useState(false)
+  const [linkUrl, setLinkUrl] = useState("")
+  const [isPreview, setIsPreview] = useState(false)
 
   const editor = useEditor({
     extensions,
     content: value,
     onUpdate: ({ editor }) => {
-      const content = editor.getHTML();
-      onChange(content);
+      const content = editor.getHTML()
+      onChange(content)
 
       // Update word count and reading time
-      const text = editor.getText();
-      const words = text.trim().split(/\s+/).length;
-      setWordCount(words);
-      setReadingTime(Math.ceil(words / 200).toString());
+      const text = editor.getText()
+      const words = text.trim().split(/\s+/).length
+      setWordCount(words)
+      setReadingTime(Math.ceil(words / 200).toString())
     },
-  });
+  })
 
   const handleLinkSubmit = () => {
     if (linkUrl) {
       // Insert a simple underlined clickable link on a single line
-      const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: #2563eb;">${linkUrl}</a><br/>`;
-      editor?.chain().focus().insertContent(linkHtml).run();
-      setLinkUrl("");
-      setShowLinkMenu(false);
+      const linkHtml = `<a href="${linkUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: #2563eb;">${linkUrl}</a><br/>`
+      editor?.chain().focus().insertContent(linkHtml).run()
+      setLinkUrl("")
+      setShowLinkMenu(false)
     }
-  };
+  }
 
   if (!editor) {
-    return null;
+    return null
   }
 
   return (
@@ -117,6 +117,30 @@ const RichTextEditor = ({
             <FaChevronDown className="h-4 w-4" />
           </button>
         </div>
+
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          className={`toolbar-button ${editor.isActive("heading", { level: 1 }) ? "active" : ""}`}
+          title="Heading 1"
+        >
+          <Heading1 className="h-[18px] w-[18px]" />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className={`toolbar-button ${editor.isActive("heading", { level: 2 }) ? "active" : ""}`}
+          title="Heading 2"
+        >
+          <Heading2 className="h-[18px] w-[18px]" />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          className={`toolbar-button ${editor.isActive("heading", { level: 3 }) ? "active" : ""}`}
+          title="Heading 3"
+        >
+          <Heading3 className="h-[18px] w-[18px]" />
+        </button>
+
+        <div className="toolbar-divider" />
 
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -208,7 +232,7 @@ const RichTextEditor = ({
             className="link-input"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                handleLinkSubmit();
+                handleLinkSubmit()
               }
             }}
           />
@@ -233,7 +257,7 @@ const RichTextEditor = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default RichTextEditor;
+export default RichTextEditor
