@@ -113,14 +113,15 @@ enum AdFormat {
   MOBILE
 }
 
+// Define models after enums
 model paymentSession {
-  id              String   @id @default(cuid())
+  id              String          @id @default(cuid())
   userId          String
-  paymentIntentId String   @unique
-  createdAt       DateTime @default(now())
+  paymentIntentId String          @unique
+  createdAt       DateTime        @default(now())
   paymentMethod   String
   status          String
-  user            User     @relation("UserPayments", fields: [userId], references: [id])
+  user            User            @relation("UserPayments", fields: [userId], references: [id])
   Advertisement   Advertisement[]
 
   @@index([userId])
@@ -308,6 +309,7 @@ model Notification {
 model PublisherRequest {
   id           String         @id @default(cuid())
   userId       String
+  email        String
   status       RequestStatus
   requestedAt  DateTime       @default(now())
   respondedAt  DateTime?
@@ -371,31 +373,31 @@ model AdvertiserProfile {
 }
 
 model Advertisement {
-  id              String         @id @default(cuid())
-  name            String
-  type            String
-  location        String
-  region          AdRegion
-  status          AdStatus
-  startDate       DateTime
-  endDate         DateTime
-  duration        Int
-  durationType    AdDurationType
-  targetUrl       String?
-  dimensions      Json
-  price          Float
-  placement      AdPlacement
-  format         AdFormat
-  isApproved     Boolean       @default(false)
-  isPaid         Boolean       @default(false)
-  virusScanStatus String       @default("pending")
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  userId         String
-  mediaId        String
-  user           User          @relation(fields: [userId], references: [id])
-  media          Media         @relation(fields: [mediaId], references: [id])
-  paymentSession paymentSession? @relation(fields: [paymentSessionId], references: [id])
+  id               String          @id @default(cuid())
+  name             String
+  type             String
+  location         String
+  region           AdRegion
+  status           AdStatus
+  startDate        DateTime
+  endDate          DateTime
+  duration         Int
+  durationType     AdDurationType
+  targetUrl        String?
+  dimensions       Json
+  price            Float
+  placement        AdPlacement
+  format           AdFormat
+  isApproved       Boolean         @default(false)
+  isPaid           Boolean         @default(false)
+  virusScanStatus  String          @default("pending")
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  userId           String
+  mediaId          String
+  user             User            @relation(fields: [userId], references: [id])
+  media            Media           @relation(fields: [mediaId], references: [id])
+  paymentSession   paymentSession? @relation(fields: [paymentSessionId], references: [id])
   paymentSessionId String?
 
   @@index([userId])
@@ -462,15 +464,13 @@ model Document {
   updatedAt DateTime @updatedAt
 }
 
-
-
 model AdPricingRule {
   id           String         @id @default(cuid())
   region       AdRegion
-  position     String        // e.g., "top", "sidebar", "footer"
+  position     String // e.g., "top", "sidebar", "footer"
   durationType AdDurationType
   basePrice    Float
   multiplier   Float
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
 }
