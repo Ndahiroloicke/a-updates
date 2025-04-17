@@ -1,40 +1,40 @@
-"use client"
+"use client";
 
-import { useSession } from "@/app/(main)/SessionProvider"
-import { redirect } from "next/navigation"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { useSession } from "@/app/(main)/SessionProvider";
+import { redirect } from "next/navigation";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { toast } from "@/components/ui/use-toast"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type PricingRule = {
-  id: string
-  region: string
-  position: string
-  durationType: string
-  basePrice: number
-  multiplier: number
-}
+  id: string;
+  region: string;
+  position: string;
+  durationType: string;
+  basePrice: number;
+  multiplier: number;
+};
 
 export default function AdPricingPage() {
-  const { user } = useSession()
-  const [isLoading, setIsLoading] = useState(false)
-  const [pricingRules, setPricingRules] = useState<PricingRule[]>([])
-  const [newRule, setNewRule] = useState<Partial<PricingRule>>({})
+  const { user } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
+  const [pricingRules, setPricingRules] = useState<PricingRule[]>([]);
+  const [newRule, setNewRule] = useState<Partial<PricingRule>>({});
 
   // Redirect if not admin
   if (!user || user.role !== "ADMIN") {
-    redirect("/")
+    redirect("/");
   }
 
   const handleSaveRule = async () => {
@@ -42,64 +42,66 @@ export default function AdPricingPage() {
       toast({
         variant: "destructive",
         description: "Please fill in all required fields",
-      })
-      return
+      });
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const response = await fetch("/api/admin/ad-pricing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newRule),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to save pricing rule")
+        throw new Error("Failed to save pricing rule");
       }
 
-      const savedRule = await response.json()
-      setPricingRules([...pricingRules, savedRule])
-      setNewRule({})
+      const savedRule = await response.json();
+      setPricingRules([...pricingRules, savedRule]);
+      setNewRule({});
       toast({
         description: "Pricing rule saved successfully",
-      })
+      });
     } catch (error) {
       toast({
         variant: "destructive",
         description: "Failed to save pricing rule",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleDeleteRule = async (id: string) => {
     try {
       const response = await fetch(`/api/admin/ad-pricing/${id}`, {
         method: "DELETE",
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("Failed to delete pricing rule")
+        throw new Error("Failed to delete pricing rule");
       }
 
-      setPricingRules(pricingRules.filter(rule => rule.id !== id))
+      setPricingRules(pricingRules.filter((rule) => rule.id !== id));
       toast({
         description: "Pricing rule deleted successfully",
-      })
+      });
     } catch (error) {
       toast({
         variant: "destructive",
         description: "Failed to delete pricing rule",
-      })
+      });
     }
-  }
+  };
 
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Advertisement Pricing Management</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          Advertisement Pricing Management
+        </h2>
       </div>
 
       <Tabs defaultValue="pricing-rules" className="space-y-4">
@@ -154,9 +156,15 @@ export default function AdPricingPage() {
                       <SelectValue placeholder="Select region" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="LOCAL">Local (Single Country)</SelectItem>
-                      <SelectItem value="MULTI_COUNTRY">Multi-Country</SelectItem>
-                      <SelectItem value="ALL_AFRICA">All Africa</SelectItem>
+                      <SelectItem value="LOCAL">
+                        Local (Single Country)
+                      </SelectItem>
+                      <SelectItem value="MULTI_COUNTRY">
+                        Multi-Country
+                      </SelectItem>
+                      <SelectItem value="ALL_AFRICA">
+                        All African Countries
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -188,7 +196,10 @@ export default function AdPricingPage() {
                     type="number"
                     value={newRule.basePrice || ""}
                     onChange={(e) =>
-                      setNewRule({ ...newRule, basePrice: parseFloat(e.target.value) })
+                      setNewRule({
+                        ...newRule,
+                        basePrice: parseFloat(e.target.value),
+                      })
                     }
                     placeholder="Enter base price"
                   />
@@ -202,7 +213,10 @@ export default function AdPricingPage() {
                     step="0.1"
                     value={newRule.multiplier || ""}
                     onChange={(e) =>
-                      setNewRule({ ...newRule, multiplier: parseFloat(e.target.value) })
+                      setNewRule({
+                        ...newRule,
+                        multiplier: parseFloat(e.target.value),
+                      })
                     }
                     placeholder="Enter multiplier"
                   />
@@ -221,5 +235,5 @@ export default function AdPricingPage() {
         </TabsContent>
       </Tabs>
     </div>
-  )
-} 
+  );
+}

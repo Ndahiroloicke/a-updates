@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { AdPlacement, AdFormat, AdRegion } from '@prisma/client';
+import { useState, useEffect } from "react";
+import { AdPlacement, AdFormat, AdRegion } from "@prisma/client";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
@@ -32,6 +32,12 @@ const REGION_MULTIPLIERS = {
   [AdRegion.ALL_AFRICA]: 2,
 };
 
+const REGION_LABELS = {
+  [AdRegion.LOCAL]: "Local (Single Country)",
+  [AdRegion.MULTI_COUNTRY]: "Multi-Country",
+  [AdRegion.ALL_AFRICA]: "All African Countries",
+};
+
 interface AdPlacementSelectorProps {
   onPlacementChange: (placement: AdPlacement) => void;
   onFormatChange: (format: AdFormat) => void;
@@ -45,8 +51,12 @@ export default function AdPlacementSelector({
   region,
   className = "",
 }: AdPlacementSelectorProps) {
-  const [selectedPlacement, setSelectedPlacement] = useState<AdPlacement>(AdPlacement.RIGHT_COLUMN_TOP);
-  const [selectedFormat, setSelectedFormat] = useState<AdFormat>(AdFormat.BANNER);
+  const [selectedPlacement, setSelectedPlacement] = useState<AdPlacement>(
+    AdPlacement.RIGHT_COLUMN_TOP,
+  );
+  const [selectedFormat, setSelectedFormat] = useState<AdFormat>(
+    AdFormat.BANNER,
+  );
   const [price, setPrice] = useState<number>(0);
 
   useEffect(() => {
@@ -68,12 +78,18 @@ export default function AdPlacementSelector({
   };
 
   const placementDescriptions = {
-    [AdPlacement.RIGHT_COLUMN_TOP]: "Top of the right sidebar - highest visibility",
-    [AdPlacement.RIGHT_COLUMN_MIDDLE]: "Middle of the right sidebar - good visibility",
-    [AdPlacement.RIGHT_COLUMN_BOTTOM]: "Bottom of the right sidebar - moderate visibility",
-    [AdPlacement.BELOW_FOOTER]: "Below the page footer - budget-friendly option",
-    [AdPlacement.IN_FEED]: "Integrated within the content feed - natural placement",
-    [AdPlacement.FULL_PAGE_TAKEOVER]: "Full-page takeover - maximum impact (5 seconds)",
+    [AdPlacement.RIGHT_COLUMN_TOP]:
+      "Top of the right sidebar - highest visibility",
+    [AdPlacement.RIGHT_COLUMN_MIDDLE]:
+      "Middle of the right sidebar - good visibility",
+    [AdPlacement.RIGHT_COLUMN_BOTTOM]:
+      "Bottom of the right sidebar - moderate visibility",
+    [AdPlacement.BELOW_FOOTER]:
+      "Below the page footer - budget-friendly option",
+    [AdPlacement.IN_FEED]:
+      "Integrated within the content feed - natural placement",
+    [AdPlacement.FULL_PAGE_TAKEOVER]:
+      "Full-page takeover - maximum impact (5 seconds)",
   };
 
   const formatDescriptions = {
@@ -87,23 +103,32 @@ export default function AdPlacementSelector({
   return (
     <div className={`space-y-6 ${className}`}>
       <div>
-        <h3 className="text-lg font-semibold mb-4">Select Ad Placement</h3>
+        <h3 className="mb-4 text-lg font-semibold">Select Ad Placement</h3>
         <RadioGroup
           defaultValue={selectedPlacement}
           onValueChange={(value) => handlePlacementChange(value as AdPlacement)}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
         >
           {Object.entries(AdPlacement).map(([key, value]) => (
-            <Card key={key} className={`p-4 cursor-pointer transition-all ${
-              selectedPlacement === value ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : ''
-            }`}>
-              <RadioGroupItem value={value} id={`placement-${value}`} className="sr-only" />
+            <Card
+              key={key}
+              className={`cursor-pointer p-4 transition-all ${
+                selectedPlacement === value
+                  ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                  : ""
+              }`}
+            >
+              <RadioGroupItem
+                value={value}
+                id={`placement-${value}`}
+                className="sr-only"
+              />
               <Label htmlFor={`placement-${value}`} className="cursor-pointer">
-                <div className="font-medium">{value.replace(/_/g, ' ')}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <div className="font-medium">{value.replace(/_/g, " ")}</div>
+                <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {placementDescriptions[value]}
                 </div>
-                <div className="text-sm font-semibold text-green-600 dark:text-green-400 mt-2">
+                <div className="mt-2 text-sm font-semibold text-green-600 dark:text-green-400">
                   Base price: ${PLACEMENT_PRICES[value]}
                 </div>
               </Label>
@@ -113,23 +138,32 @@ export default function AdPlacementSelector({
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold mb-4">Select Ad Format</h3>
+        <h3 className="mb-4 text-lg font-semibold">Select Ad Format</h3>
         <RadioGroup
           defaultValue={selectedFormat}
           onValueChange={(value) => handleFormatChange(value as AdFormat)}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          className="grid grid-cols-1 gap-4 md:grid-cols-2"
         >
           {Object.entries(AdFormat).map(([key, value]) => (
-            <Card key={key} className={`p-4 cursor-pointer transition-all ${
-              selectedFormat === value ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : ''
-            }`}>
-              <RadioGroupItem value={value} id={`format-${value}`} className="sr-only" />
+            <Card
+              key={key}
+              className={`cursor-pointer p-4 transition-all ${
+                selectedFormat === value
+                  ? "border-green-500 bg-green-50 dark:bg-green-900/20"
+                  : ""
+              }`}
+            >
+              <RadioGroupItem
+                value={value}
+                id={`format-${value}`}
+                className="sr-only"
+              />
               <Label htmlFor={`format-${value}`} className="cursor-pointer">
-                <div className="font-medium">{value.replace(/_/g, ' ')}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <div className="font-medium">{value.replace(/_/g, " ")}</div>
+                <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {formatDescriptions[value]}
                 </div>
-                <div className="text-sm font-semibold text-green-600 dark:text-green-400 mt-2">
+                <div className="mt-2 text-sm font-semibold text-green-600 dark:text-green-400">
                   Multiplier: {FORMAT_MULTIPLIERS[value]}x
                 </div>
               </Label>
@@ -138,8 +172,8 @@ export default function AdPlacementSelector({
         </RadioGroup>
       </div>
 
-      <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-        <h3 className="text-lg font-semibold mb-2">Pricing Summary</h3>
+      <div className="mt-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+        <h3 className="mb-2 text-lg font-semibold">Pricing Summary</h3>
         <div className="space-y-2">
           <div className="flex justify-between">
             <span>Base Price:</span>
@@ -153,7 +187,7 @@ export default function AdPlacementSelector({
             <span>Region Multiplier:</span>
             <span>{REGION_MULTIPLIERS[region]}x</span>
           </div>
-          <div className="border-t pt-2 mt-2 flex justify-between font-semibold">
+          <div className="mt-2 flex justify-between border-t pt-2 font-semibold">
             <span>Total Price:</span>
             <span>${price.toFixed(2)}</span>
           </div>
@@ -161,4 +195,4 @@ export default function AdPlacementSelector({
       </div>
     </div>
   );
-} 
+}
