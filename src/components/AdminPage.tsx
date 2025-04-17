@@ -39,12 +39,23 @@ import {
   Plus,
   Pencil,
   Check,
+  Bell,
+  X,
+  Building2,
+  GraduationCap,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Update the User type to match your database schema
 interface User {
@@ -59,13 +70,82 @@ interface User {
   // Add other fields as needed
 }
 
+// Add this type definition at the top level
+interface Notification {
+  id: string;
+  type: string;
+  email: string;
+  description: string;
+  category: string;
+  status: "pending" | "approved" | "rejected";
+  timestamp: string;
+}
+
 export default function AdminPage({ userInfo }: { userInfo: User }) {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [requirements, setRequirements] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("Tech & AI");
   const { toast } = useToast();
+
+  // Add state for notifications
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: "1",
+      type: "New Publisher Request",
+      email: "james.wilson@example.com",
+      description:
+        "Tech blogger with focus on AI and machine learning. 8+ years of experience in software development.",
+      category: "Tech & AI",
+      status: "pending",
+      timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+    },
+    {
+      id: "2",
+      type: "Enterprise Partnership",
+      email: "corporate@techdigest.com",
+      description:
+        "Technology news website seeking enterprise partnership. 100k+ daily active users, requesting API access.",
+      category: "Enterprise",
+      status: "pending",
+      timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+    },
+    {
+      id: "3",
+      type: "Educational Institution",
+      email: "publications@edutech.edu",
+      description:
+        "Educational institution looking to publish research papers and academic content. Requesting bulk content management tools.",
+      category: "Academic",
+      status: "pending",
+      timestamp: new Date(Date.now() - 10800000).toISOString(), // 3 hours ago
+    },
+  ]);
+
+  // Add function to scroll to notifications
+  const scrollToNotifications = () => {
+    document
+      .getElementById("notifications-section")
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Add function to handle notification status updates
+  const handleNotificationAction = (
+    id: string,
+    action: "approved" | "rejected",
+  ) => {
+    setNotifications(
+      notifications.map((notif) =>
+        notif.id === id ? { ...notif, status: action } : notif,
+      ),
+    );
+  };
+
+  const pendingNotifications = notifications.filter(
+    (n) => n.status === "pending",
+  ).length;
 
   const handlePayment = async () => {
     try {
@@ -112,32 +192,34 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
     try {
       setIsLoading(true);
 
-      const response = await fetch("/api/publisher-request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId: userInfo.id,
-          email: email,
-          message: requirements,
-        }),
-      });
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      const data = await response.json();
+      // Create a new notification
+      const newNotification: Notification = {
+        id: (notifications.length + 1).toString(),
+        type: "New Publisher Request",
+        email: email,
+        description: requirements,
+        category: selectedCategory,
+        status: "pending",
+        timestamp: new Date().toISOString(),
+      };
 
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to submit request");
-      }
+      // Add the new notification to the list
+      setNotifications([newNotification, ...notifications]);
 
       toast({
         title: "Success!",
-        description: "Your publisher request has been submitted.",
+        description:
+          "Your publisher request has been submitted. Admin will review it shortly.",
+        className: "bg-green-50 text-green-600 border-green-200",
       });
 
       // Reset form
       setEmail("");
       setRequirements("");
+      setSelectedCategory("Tech & AI");
     } catch (error) {
       console.error("Submission error:", error);
       toast({
@@ -160,6 +242,17 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
               Welcome: <span className="text-primary">{userInfo.username}</span>
             </h1>
           </header>
+          {userInfo.role === "ADMIN" && pendingNotifications > 0 && (
+            <button
+              onClick={scrollToNotifications}
+              className="relative flex items-center rounded-full bg-white p-2 shadow-lg transition-all hover:shadow-xl"
+            >
+              <Bell className="h-6 w-6 text-green-600" />
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                {pendingNotifications}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Admin Links Grid */}
@@ -405,10 +498,27 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                 </div>
 
                 <div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select
+                    value={selectedCategory}
+                    onValueChange={setSelectedCategory}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Tech & AI">Tech & AI</SelectItem>
+                      <SelectItem value="Enterprise">Enterprise</SelectItem>
+                      <SelectItem value="Academic">Academic</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label htmlFor="requirements">Additional Requirements</Label>
                   <Textarea
                     id="requirements"
-                    placeholder="Describe any specific requirements or questions"
+                    placeholder="Describe your background, expertise, and specific requirements"
                     className="h-32 w-full"
                     value={requirements}
                     onChange={(e) => setRequirements(e.target.value)}
@@ -539,7 +649,9 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
             {/* User Management */}
             <Card className="border-border bg-card text-black dark:text-white">
               <CardContent className="space-y-3 pt-4">
-                <h2 className="mb-4 text-lg font-semibold">User Management</h2>
+                <h2 className="mb-4 text-lg font-semibold text-green-600">
+                  User Management
+                </h2>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                   <Button
                     asChild
@@ -549,6 +661,16 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                     <Link href="/users">
                       <Users className="mr-2 h-4 w-4" />
                       Users
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <Link href="/subadmins">
+                      <Shield className="mr-2 h-4 w-4 text-green-600" />
+                      Sub-Admins
                     </Link>
                   </Button>
                   <Button
@@ -666,135 +788,156 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
             </Card>
 
             {/* Notifications Section */}
-            <Card className="border-border bg-card text-black dark:text-white">
-              <CardContent className="space-y-3 pt-4">
-                <h2 className="mb-4 text-lg font-semibold">
-                  Publisher Notifications
-                </h2>
-                <div className="space-y-4">
-                  {/* Notification Cards */}
-                  <Card className="border-l-4 border-l-blue-500">
-                    <CardContent className="p-4">
-                      <div className="mb-2 flex items-start justify-between">
-                        <div>
-                          <h3 className="font-medium">New Publisher Request</h3>
-                          <p className="text-sm text-muted-foreground">
-                            john.doe@example.com
-                          </p>
-                        </div>
-                        <div className="space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-green-500/10 text-green-500 hover:bg-green-500/20"
-                          >
-                            <Check className="h-4 w-4" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                          >
-                            <Ban className="h-4 w-4" />
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="text-sm">
-                        <p className="mb-1 font-medium">
-                          Additional Requirements:
-                        </p>
-                        <p className="text-muted-foreground">
-                          Looking to publish educational content. Have 5 years
-                          of experience in content creation.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-yellow-500">
-                    <CardContent className="p-4">
-                      <div className="mb-2 flex items-start justify-between">
-                        <div>
-                          <h3 className="font-medium">
-                            Publisher Upgrade Request
-                          </h3>
-                          <p className="text-sm text-muted-foreground">
-                            sarah.smith@example.com
-                          </p>
-                        </div>
-                        <div className="space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-green-500/10 text-green-500 hover:bg-green-500/20"
-                          >
-                            <Check className="h-4 w-4" />
-                            Approve
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="bg-red-500/10 text-red-500 hover:bg-red-500/20"
-                          >
-                            <Ban className="h-4 w-4" />
-                            Reject
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="text-sm">
-                        <p className="mb-1 font-medium">
-                          Additional Requirements:
-                        </p>
-                        <p className="text-muted-foreground">
-                          Requesting upgrade to Pro Publisher. Currently have
-                          10k+ monthly readers.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
+            <Card id="notifications-section" className="mt-8 bg-white">
+              <CardContent className="space-y-4 pt-4">
+                <div className="flex items-center justify-between border-b pb-4">
+                  <h2 className="flex items-center text-xl font-semibold text-green-600">
+                    <Bell className="mr-2 h-5 w-5" />
+                    Publisher Notifications
+                  </h2>
+                  {pendingNotifications > 0 && (
+                    <div className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-600">
+                      {pendingNotifications} New Requests
+                    </div>
+                  )}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Package Management */}
-            <Card className="border-border bg-card text-black dark:text-white">
-              <CardContent className="space-y-3 pt-4">
-                <h2 className="mb-4 text-lg font-semibold">
-                  Package Management
-                </h2>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
-                    <Link href="/create-package">
-                      <Plus className="mr-2 h-4 w-4" />
-                      Create Package
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
-                    <Link href="/edit-package">
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit Package
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
-                    <Link href="/package-item-type">
-                      <Package className="mr-2 h-4 w-4" />
-                      Package Item Type
-                    </Link>
-                  </Button>
+                <div className="space-y-4">
+                  {notifications
+                    .sort(
+                      (a, b) =>
+                        new Date(b.timestamp).getTime() -
+                        new Date(a.timestamp).getTime(),
+                    )
+                    .map((notification) => (
+                      <Card
+                        key={notification.id}
+                        className={`group overflow-hidden rounded-lg border bg-white shadow-sm transition-all ${
+                          notification.status === "pending"
+                            ? "border-gray-100 hover:border-green-100 hover:shadow-md"
+                            : notification.status === "approved"
+                              ? "border-green-100 bg-green-50"
+                              : "border-red-100 bg-red-50"
+                        }`}
+                      >
+                        <CardContent className="p-4">
+                          <div className="mb-4 flex items-center justify-between border-b border-gray-50 pb-2">
+                            <div className="flex items-center space-x-3">
+                              <div
+                                className={`rounded-full p-2 ${
+                                  notification.category === "Tech & AI"
+                                    ? "bg-blue-50"
+                                    : notification.category === "Enterprise"
+                                      ? "bg-amber-50"
+                                      : "bg-indigo-50"
+                                }`}
+                              >
+                                {notification.category === "Tech & AI" ? (
+                                  <UserPlus className="h-5 w-5 text-blue-500" />
+                                ) : notification.category === "Enterprise" ? (
+                                  <Building2 className="h-5 w-5 text-amber-500" />
+                                ) : (
+                                  <GraduationCap className="h-5 w-5 text-indigo-500" />
+                                )}
+                              </div>
+                              <div>
+                                <h3
+                                  className={`font-medium ${
+                                    notification.category === "Tech & AI"
+                                      ? "text-blue-600"
+                                      : notification.category === "Enterprise"
+                                        ? "text-amber-600"
+                                        : "text-indigo-600"
+                                  }`}
+                                >
+                                  {notification.type}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  {notification.email}
+                                </p>
+                              </div>
+                            </div>
+                            <div
+                              className={`rounded-full px-3 py-1 text-sm ${
+                                notification.category === "Tech & AI"
+                                  ? "bg-blue-50 text-blue-600"
+                                  : notification.category === "Enterprise"
+                                    ? "bg-amber-50 text-amber-600"
+                                    : "bg-indigo-50 text-indigo-600"
+                              }`}
+                            >
+                              {notification.category}
+                            </div>
+                          </div>
+                          <div className="mb-4 text-sm text-gray-600">
+                            <p>{notification.description}</p>
+                          </div>
+                          <div className="flex items-center justify-end space-x-2">
+                            {notification.status === "pending" ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    handleNotificationAction(
+                                      notification.id,
+                                      "approved",
+                                    );
+                                    toast({
+                                      title: "Request Approved",
+                                      description: `${notification.type} has been approved successfully.`,
+                                      className:
+                                        "bg-green-50 text-green-600 border-green-200",
+                                    });
+                                  }}
+                                  className="bg-green-50 text-green-600 hover:bg-green-100"
+                                >
+                                  <Check className="mr-1 h-4 w-4" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    handleNotificationAction(
+                                      notification.id,
+                                      "rejected",
+                                    );
+                                    toast({
+                                      title: "Request Rejected",
+                                      description: `${notification.type} has been rejected.`,
+                                      className:
+                                        "bg-red-50 text-red-600 border-red-200",
+                                    });
+                                  }}
+                                  className="bg-red-50 text-red-600 hover:bg-red-100"
+                                >
+                                  <X className="mr-1 h-4 w-4" />
+                                  Reject
+                                </Button>
+                              </>
+                            ) : (
+                              <div
+                                className={`rounded-full px-4 py-1 text-sm ${
+                                  notification.status === "approved"
+                                    ? "bg-green-100 text-green-600"
+                                    : "bg-red-100 text-red-600"
+                                }`}
+                              >
+                                {notification.status === "approved" ? (
+                                  <span className="flex items-center">
+                                    <Check className="mr-1 h-4 w-4" />
+                                    Approved
+                                  </span>
+                                ) : (
+                                  <span className="flex items-center">
+                                    <X className="mr-1 h-4 w-4" />
+                                    Rejected
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                 </div>
               </CardContent>
             </Card>
@@ -864,6 +1007,47 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                     <Link href="/statistics">
                       <BarChart className="mr-2 h-4 w-4" />
                       Advertiser & Publisher Statistics
+                    </Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Package Management */}
+            <Card className="border-border bg-card text-black dark:text-white">
+              <CardContent className="space-y-3 pt-4">
+                <h2 className="mb-4 text-lg font-semibold">
+                  Package Management
+                </h2>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <Link href="/create-package">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Package
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <Link href="/edit-package">
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit Package
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full justify-start"
+                  >
+                    <Link href="/package-item-type">
+                      <Package className="mr-2 h-4 w-4" />
+                      Package Item Type
                     </Link>
                   </Button>
                 </div>
