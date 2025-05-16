@@ -11,12 +11,19 @@ const nextConfig = {
       'utfs.io',
       'j1384sfojb.ufs.sh',
       'example.com',
-      'your-other-domain.com'
+      'your-other-domain.com',
+      'j1384sfojb.ufs.sh'
     ],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: 'utfs.io',
+        port: '',
+        pathname: '/a/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.ufs.sh',
         port: '',
         pathname: '/a/**',
       },

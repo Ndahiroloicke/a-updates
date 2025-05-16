@@ -146,7 +146,7 @@ export async function POST(request: Request) {
       data: {
         name,
         type,
-        location: region === AdRegion.LOCAL ? "Single Country" : region === AdRegion.MULTI_COUNTRY ? "Multiple Countries" : "All Africa",
+        location: region === AdRegion.LOCAL ? "Single Country" : region === AdRegion.MULTI_COUNTRY ? "Multiple Countries" : "All African Countries",
         region,
         placement,
         format,

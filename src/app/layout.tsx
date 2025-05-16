@@ -8,7 +8,7 @@ import { fileRouter } from "./api/uploadthing/core";
 import "./globals.css";
 import ReactQueryProvider from "./ReactQueryProvider";
 import { AdProvider } from "@/contexts/AdContext";
-
+import { TranslationProvider } from "@/contexts/TranslationContext";
 
 const workSans = localFont({
   src: [
@@ -64,20 +64,20 @@ export const metadata: Metadata = {
   description: "Your trusted source for African news, polls, and discussions",
   keywords: "Africa, news, polls, discussions, African updates, current events",
   openGraph: {
-    type: 'website',
-    siteName: 'Africa Updates',
-    locale: 'en_US',
+    type: "website",
+    siteName: "Africa Updates",
+    locale: "en_US",
   },
   robots: {
     index: true,
     follow: true,
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
-  viewport: 'width=device-width, initial-scale=1',
-  themeColor: '#22c55e',
+  viewport: "width=device-width, initial-scale=1",
+  themeColor: "#22c55e",
 };
 
 export default function RootLayout({
@@ -97,7 +97,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <AdProvider>
-              {children}
+              <TranslationProvider>{children}</TranslationProvider>
             </AdProvider>
           </ThemeProvider>
         </ReactQueryProvider>
