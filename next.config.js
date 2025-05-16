@@ -9,6 +9,7 @@ const nextConfig = {
   images: {
     domains: [
       'utfs.io',
+      'j1384sfojb.ufs.sh',
       'example.com',
       'your-other-domain.com'
     ],
