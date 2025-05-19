@@ -114,7 +114,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
   const [publisherRequestStatus, setPublisherRequestStatus] = useState<string | null>(null);
   const [checkingRequestStatus, setCheckingRequestStatus] = useState(false);
 
-  // Function to check publisher request status
+  // Function to check publisher request status - only use this when needed
   const checkPublisherRequestStatus = async () => {
     try {
       setCheckingRequestStatus(true);
@@ -166,9 +166,10 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
   useEffect(() => {
     if (userInfo.role === "ADMIN") {
       fetchPublisherRequests();
-    } else {
-      // For regular users, check their publisher request status
-      checkPublisherRequestStatus();
+    } else if (userInfo.role === "USER") {
+      // For regular users, only check if they have a rejected request when needed
+      // Instead of checking on component mount, we'll let them check manually
+      setPublisherRequestStatus(null);
     }
   }, [userInfo.role]);
 
@@ -331,7 +332,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-        category: selectedCategory,
+          category: selectedCategory,
           requirements,
         }),
       });
@@ -364,9 +365,9 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
       setRequirements("");
       setSelectedCategory("Tech & AI");
       
-      // Instead of redirecting, update the component state to show pending status
+      // Update the status immediately to PENDING to show the pending message
+      // No need to make another API call
       if (data && data.id) {
-        // Update the status immediately to PENDING to show the pending message
         setPublisherRequestStatus("PENDING");
       }
     } catch (error) {
@@ -588,50 +589,9 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
         </div>
         {userInfo.role !== "ADMIN" && (
           <>
-            {publisherRequestStatus === null && !checkingRequestStatus ? (
-              <PublisherRequestForm
-                userInfo={userInfo}
-                email={email}
-                setEmail={setEmail}
-                requirements={requirements}
-                setRequirements={setRequirements}
-                selectedCategory={selectedCategory}
-                setSelectedCategory={setSelectedCategory}
-                isLoading={isLoading}
-                handleSubmit={handleSubmit}
-                onRequestRefresh={checkPublisherRequestStatus}
-              />
-            ) : checkingRequestStatus ? (
-              <div className="mt-6 space-y-4 md:mt-8 md:space-y-6 flex justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : publisherRequestStatus === "PENDING" ? (
-            <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
-                <Card className="border-amber-200 bg-amber-50">
-                  <CardContent className="p-6 text-center">
-                    <Loader2 className="h-12 w-12 mx-auto text-amber-600 mb-4 animate-spin" />
-                    <h2 className="text-2xl font-bold text-amber-700 mb-2">Publisher Request Pending</h2>
-                    <p className="text-amber-600 mb-2">
-                      Your request to become a publisher is currently being reviewed by our administrators.
-                      We'll notify you once a decision has been made.
-                    </p>
-                    <div className="flex items-center justify-center mt-4 text-sm text-amber-700">
-                      <Clock className="h-4 w-4 mr-2" />
-                      <span>Usually takes 1-2 business days</span>
-                    </div>
-                    
-                    <Button
-                      onClick={checkPublisherRequestStatus}
-                      variant="outline"
-                      className="mt-4 border-amber-200 text-amber-600 hover:bg-amber-100"
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Check Status
-                    </Button>
-                  </CardContent>
-                </Card>
-                    </div>
-            ) : publisherRequestStatus === "APPROVED" || userInfo.role === "PUBLISHER" ? (
+            {/* Only show publisher content for non-admin users */}
+            {userInfo.role === "PUBLISHER" ? (
+              // For publishers, show a success message with links to create content
               <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
                 <Card className="border-green-200 bg-green-50">
                   <CardContent className="p-6 text-center">
@@ -641,39 +601,110 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                       Your account has publisher status. You can now create and publish content.
                     </p>
                     <div className="mt-4">
-                    <Button
+                      <Button
                         variant="outline"
                         className="border-green-200 text-green-600 hover:bg-green-100"
                         onClick={() => window.location.href = "/posts/create"}
                       >
                         <PenSquare className="mr-2 h-4 w-4" />
                         Create New Content
-                    </Button>
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
               </div>
-            ) : publisherRequestStatus === "REJECTED" ? (
-              <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
-                <Card className="border-red-200 bg-red-50">
-                  <CardContent className="p-6 text-center">
-                    <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
-                    <h2 className="text-2xl font-bold text-red-700 mb-2">Previous Request Wasn't Approved</h2>
-                    <p className="text-red-600 mb-4">
-                      Your previous publisher request was not approved. You may submit a new request
-                      with additional information to be reconsidered.
-                    </p>
-                    <Button
-                      onClick={() => setPublisherRequestStatus(null)}
-                      className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
-                    >
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Submit a New Request
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : null}
+            ) : userInfo.role === "USER" && (
+              // For regular users, show the appropriate content
+              <>
+                {checkingRequestStatus ? (
+                  <div className="mt-6 space-y-4 md:mt-8 md:space-y-6 flex justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : publisherRequestStatus === "PENDING" ? (
+                  <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+                    <Card className="border-amber-200 bg-amber-50">
+                      <CardContent className="p-6 text-center">
+                        <Loader2 className="h-12 w-12 mx-auto text-amber-600 mb-4 animate-spin" />
+                        <h2 className="text-2xl font-bold text-amber-700 mb-2">Publisher Request Pending</h2>
+                        <p className="text-amber-600 mb-2">
+                          Your request to become a publisher is currently being reviewed by our administrators.
+                          We'll notify you once a decision has been made.
+                        </p>
+                        <div className="flex items-center justify-center mt-4 text-sm text-amber-700">
+                          <Clock className="h-4 w-4 mr-2" />
+                          <span>Usually takes 1-2 business days</span>
+                        </div>
+                        
+                        <Button
+                          onClick={checkPublisherRequestStatus}
+                          variant="outline"
+                          className="mt-4 border-amber-200 text-amber-600 hover:bg-amber-100"
+                        >
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Check Status
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : publisherRequestStatus === "APPROVED" ? (
+                  <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+                    <Card className="border-green-200 bg-green-50">
+                      <CardContent className="p-6 text-center">
+                        <Check className="h-12 w-12 mx-auto text-green-600 mb-4" />
+                        <h2 className="text-2xl font-bold text-green-700 mb-2">Your Request Has Been Approved!</h2>
+                        <p className="text-green-600 mb-2">
+                          Congratulations! Your publisher request has been approved. Please refresh the page to update your role.
+                        </p>
+                        <div className="mt-4">
+                          <Button
+                            variant="default"
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => window.location.reload()}
+                          >
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Refresh Page
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : publisherRequestStatus === "REJECTED" ? (
+                  <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+                    <Card className="border-red-200 bg-red-50">
+                      <CardContent className="p-6 text-center">
+                        <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
+                        <h2 className="text-2xl font-bold text-red-700 mb-2">Previous Request Wasn't Approved</h2>
+                        <p className="text-red-600 mb-4">
+                          Your previous publisher request was not approved. You may submit a new request
+                          with additional information to be reconsidered.
+                        </p>
+                        <Button 
+                          onClick={() => setPublisherRequestStatus(null)}
+                          className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
+                        >
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Submit a New Request
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  // Default: Show the publisher request form for regular users
+                  <PublisherRequestForm
+                    userInfo={userInfo}
+                    email={email}
+                    setEmail={setEmail}
+                    requirements={requirements}
+                    setRequirements={setRequirements}
+                    selectedCategory={selectedCategory}
+                    setSelectedCategory={setSelectedCategory}
+                    isLoading={isLoading}
+                    handleSubmit={handleSubmit}
+                    onRequestRefresh={checkPublisherRequestStatus}
+                  />
+                )}
+              </>
+            )}
 
             <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
               <h2 className="mb-8 text-center text-2xl font-bold">
@@ -1390,182 +1421,7 @@ function PublisherRequestForm({
   handleSubmit,
   onRequestRefresh
 }: PublisherRequestFormProps) {
-  const [requestStatus, setRequestStatus] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
-  
-  // Check for existing publisher request or user role on mount and when role changes
-  useEffect(() => {
-    checkPublisherStatus();
-  }, [userInfo.role]);
-  
-  const checkPublisherStatus = async () => {
-    try {
-      setLoading(true);
-      
-      // First check if user is already a publisher
-      if (userInfo.role === "PUBLISHER") {
-        console.log("User is already a publisher");
-        setRequestStatus("ALREADY_PUBLISHER");
-        setLoading(false);
-        return;
-      }
-      
-      console.log("Checking publisher request status...");
-      
-      const response = await fetch("/api/publisher-request");
-      console.log("Status check response:", response.status);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error("Error checking publisher status:", errorData);
-        throw new Error(errorData.error || errorData.details || "Failed to check publisher status");
-      }
-      
-      const requests = await response.json();
-      console.log("Publisher requests data:", requests);
-      
-      if (Array.isArray(requests) && requests.length > 0) {
-        // Get the most recent request
-        const latestRequest = requests[0];
-        console.log("Latest request:", latestRequest);
-        setRequestStatus(latestRequest.status);
-      } else {
-        console.log("No existing publisher requests found");
-        setRequestStatus(null);
-      }
-    } catch (error) {
-      console.error("Error checking publisher status:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to check publisher status"
-      });
-      setRequestStatus(null);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  if (loading) {
-    return (
-      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
-  // If the user is already a publisher, show success message
-  if (userInfo.role === "PUBLISHER" || requestStatus === "ALREADY_PUBLISHER") {
-    return (
-      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-6 text-center">
-            <Check className="h-12 w-12 mx-auto text-green-600 mb-4" />
-            <h2 className="text-2xl font-bold text-green-700 mb-2">You are a Publisher!</h2>
-            <p className="text-green-600 mb-2">
-              Your account has publisher status. You can now create and publish content.
-            </p>
-            <div className="mt-4">
-              <Button
-                variant="outline"
-                className="border-green-200 text-green-600 hover:bg-green-100"
-                onClick={() => window.location.href = "/posts/create"}
-              >
-                <PenSquare className="mr-2 h-4 w-4" />
-                Create New Content
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
-  // If there's a pending request
-  if (requestStatus === "PENDING") {
-    return (
-      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="p-6 text-center">
-            <Loader2 className="h-12 w-12 mx-auto text-amber-600 mb-4 animate-spin" />
-            <h2 className="text-2xl font-bold text-amber-700 mb-2">Publisher Request Pending</h2>
-            <p className="text-amber-600 mb-2">
-              Your request to become a publisher is currently being reviewed by our administrators.
-              We'll notify you once a decision has been made.
-            </p>
-            <div className="flex items-center justify-center mt-4 text-sm text-amber-700">
-              <Clock className="h-4 w-4 mr-2" />
-              <span>Usually takes 1-2 business days</span>
-            </div>
-            
-            <Button 
-              onClick={onRequestRefresh}
-              variant="outline"
-              className="mt-4 border-amber-200 text-amber-600 hover:bg-amber-100"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Check Status
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
-  // If the request was approved
-  if (requestStatus === "APPROVED") {
-    return (
-      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-6 text-center">
-            <Check className="h-12 w-12 mx-auto text-green-600 mb-4" />
-            <h2 className="text-2xl font-bold text-green-700 mb-2">Your Request Has Been Approved!</h2>
-            <p className="text-green-600 mb-2">
-              Congratulations! Your publisher request has been approved. Please refresh the page to update your role.
-            </p>
-            <div className="mt-4">
-              <Button
-                variant="default"
-                className="bg-green-600 hover:bg-green-700"
-                onClick={() => window.location.reload()}
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh Page
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
-  // If the request was rejected
-  if (requestStatus === "REJECTED") {
-    return (
-      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6 text-center">
-            <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
-            <h2 className="text-2xl font-bold text-red-700 mb-2">Previous Request Wasn't Approved</h2>
-            <p className="text-red-600 mb-4">
-              Your previous publisher request was not approved. You may submit a new request
-              with additional information to be reconsidered.
-            </p>
-            <Button 
-              onClick={onRequestRefresh}
-              className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
-            >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Submit a New Request
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Show the form for new requests
+  // Show the form for new requests (simplify since parent component handles status)
   return (
     <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
       <h2 className="mb-8 text-center text-2xl font-bold">
