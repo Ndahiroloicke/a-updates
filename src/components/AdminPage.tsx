@@ -43,6 +43,7 @@ import {
   X,
   Building2,
   GraduationCap,
+  Trash2,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -56,6 +57,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useCategoryStore } from "./categoryStore";
 
 // Update the User type to match your database schema
 interface User {
@@ -231,6 +233,66 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Category management state (from Zustand store)
+  const {
+    categories,
+    addCategory,
+    editCategory,
+    deleteCategory,
+    addSubLink,
+    editSubLink,
+    deleteSubLink,
+  } = useCategoryStore();
+  const [newCategory, setNewCategory] = useState("");
+  const [editingCategoryIdx, setEditingCategoryIdx] = useState<number | null>(null);
+  const [editCategoryValue, setEditCategoryValue] = useState("");
+  const [newSubLink, setNewSubLink] = useState("");
+  const [editingSubLinkIdx, setEditingSubLinkIdx] = useState<{cat: number, sub: number} | null>(null);
+  const [editSubLinkValue, setEditSubLinkValue] = useState("");
+
+  // Add category
+  const handleAddCategory = () => {
+    if (!newCategory.trim()) return;
+    addCategory(newCategory.trim());
+    setNewCategory("");
+  };
+  // Edit category
+  const handleEditCategory = (idx: number) => {
+    setEditingCategoryIdx(idx);
+    setEditCategoryValue(categories[idx].label);
+  };
+  const handleSaveEditCategory = (idx: number) => {
+    if (!editCategoryValue.trim()) return;
+    editCategory(idx, editCategoryValue.trim());
+    setEditingCategoryIdx(null);
+    setEditCategoryValue("");
+  };
+  // Delete category
+  const handleDeleteCategory = (idx: number) => {
+    deleteCategory(idx);
+  };
+  // Add sub-link
+  const handleAddSubLink = (catIdx: number) => {
+    if (!newSubLink.trim()) return;
+    addSubLink(catIdx, newSubLink.trim());
+    setNewSubLink("");
+  };
+  // Edit sub-link
+  const handleEditSubLink = (catIdx: number, subIdx: number) => {
+    setEditingSubLinkIdx({cat: catIdx, sub: subIdx});
+    setEditSubLinkValue(categories[catIdx].subLinks[subIdx].label);
+  };
+  const handleSaveEditSubLink = (catIdx: number, subIdx: number) => {
+    if (!editSubLinkValue.trim()) return;
+    editSubLink(catIdx, subIdx, editSubLinkValue.trim());
+    setEditingSubLinkIdx(null);
+    setEditSubLinkValue("");
+  };
+  // Delete sub-link
+  const handleDeleteSubLink = (catIdx: number, subIdx: number) => {
+    deleteSubLink(catIdx, subIdx);
   };
 
   return (
@@ -1050,6 +1112,104 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                       Package Item Type
                     </Link>
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Category Management */}
+            <Card className="border-border bg-card text-black dark:text-white">
+              <CardContent className="space-y-3 pt-4">
+                <h2 className="mb-4 text-lg font-semibold text-blue-600 flex items-center gap-2">
+                  <Grid2X2 className="h-5 w-5" /> Category Management
+                </h2>
+                {/* Add Category */}
+                <div className="flex gap-2 mb-4">
+                  <Input
+                    placeholder="New category name"
+                    value={newCategory}
+                    onChange={e => setNewCategory(e.target.value)}
+                    className="w-1/2"
+                  />
+                  <Button onClick={handleAddCategory} variant="default">
+                    <Plus className="h-4 w-4 mr-1" /> Add
+                  </Button>
+                </div>
+                {/* List Categories */}
+                <div className="space-y-4">
+                  {categories.map((cat, catIdx) => (
+                    <div key={catIdx} className="border rounded p-3 bg-muted">
+                      <div className="flex items-center gap-2 mb-2">
+                        {editingCategoryIdx === catIdx ? (
+                          <>
+                            <Input
+                              value={editCategoryValue}
+                              onChange={e => setEditCategoryValue(e.target.value)}
+                              className="w-1/2"
+                            />
+                            <Button size="sm" onClick={() => handleSaveEditCategory(catIdx)} variant="default">
+                              Save
+                            </Button>
+                            <Button size="sm" onClick={() => setEditingCategoryIdx(null)} variant="outline">
+                              Cancel
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-semibold text-base">{cat.label}</span>
+                            <Button size="icon" variant="ghost" onClick={() => handleEditCategory(catIdx)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => handleDeleteCategory(catIdx)}>
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                      {/* Sub-links */}
+                      <div className="ml-4">
+                        <div className="flex gap-2 mb-2">
+                          <Input
+                            placeholder="New sub-link name"
+                            value={editingSubLinkIdx && editingSubLinkIdx.cat === catIdx ? editSubLinkValue : newSubLink}
+                            onChange={e => {
+                              if (editingSubLinkIdx && editingSubLinkIdx.cat === catIdx) setEditSubLinkValue(e.target.value);
+                              else setNewSubLink(e.target.value);
+                            }}
+                            className="w-1/3"
+                          />
+                          {editingSubLinkIdx && editingSubLinkIdx.cat === catIdx ? (
+                            <>
+                              <Button size="sm" onClick={() => handleSaveEditSubLink(catIdx, editingSubLinkIdx.sub)} variant="default">
+                                Save
+                              </Button>
+                              <Button size="sm" onClick={() => setEditingSubLinkIdx(null)} variant="outline">
+                                Cancel
+                              </Button>
+                            </>
+                          ) : (
+                            <Button size="sm" onClick={() => handleAddSubLink(catIdx)} variant="default">
+                              <Plus className="h-4 w-4 mr-1" /> Add
+                            </Button>
+                          )}
+                        </div>
+                        <ul className="space-y-1">
+                          {cat.subLinks.map((sub, subIdx) => (
+                            <li key={subIdx} className="flex items-center gap-2">
+                              {editingSubLinkIdx && editingSubLinkIdx.cat === catIdx && editingSubLinkIdx.sub === subIdx ? null : (
+                                <span>{sub.label}</span>
+                              )}
+                              <Button size="icon" variant="ghost" onClick={() => handleEditSubLink(catIdx, subIdx)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => handleDeleteSubLink(catIdx, subIdx)}>
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

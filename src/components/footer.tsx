@@ -1,14 +1,15 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Mail, Send, ArrowRight, Hash, LinkIcon, MessageSquare, BarChart2 } from "lucide-react"
+import { Mail, Send, ArrowRight, Hash, LinkIcon, MessageSquare, BarChart2, ChevronDown, Loader2 } from "lucide-react"
 import Link from "next/link"
 import RotatingAdBanner from "@/components/RotatingAdBanner"
 import { useToast } from "./ui/use-toast"
+import kyInstance from "@/lib/ky"
 
 // Sample ads data - replace with your actual ads
 const footerAds = [
@@ -56,11 +57,41 @@ const usefulLinks = [
   { name: "FAQ", href: "/faq" },
 ]
 
+// Sample businesses/orgs with addresses
+const businessLinks = [
+  {
+    name: "Nairobi Tech Hub",
+    address: "Ngong Rd, Nairobi, Kenya",
+    map: "https://maps.google.com/?q=Ngong+Rd,+Nairobi,+Kenya"
+  },
+  {
+    name: "Cape Town Innovation Center",
+    address: "123 Main St, Cape Town, South Africa",
+    map: "https://maps.google.com/?q=123+Main+St,+Cape+Town,+South+Africa"
+  },
+  {
+    name: "Lagos Business Park",
+    address: "Victoria Island, Lagos, Nigeria",
+    map: "https://maps.google.com/?q=Victoria+Island,+Lagos,+Nigeria"
+  },
+];
+
 export default function Footer() {
     
 const toast = useToast();
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [openSections, setOpenSections] = useState({
+    forums: true,
+    polls: true,
+    links: true,
+    hashtags: true,
+    business: true,
+  });
+  const [latestPolls, setLatestPolls] = useState<any[]>([]);
+  const [loadingPolls, setLoadingPolls] = useState(true);
+  const [latestForums, setLatestForums] = useState<any[]>([]);
+  const [loadingForums, setLoadingForums] = useState(true);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,6 +140,39 @@ const toast = useToast();
       setIsSubmitting(false)
     }
   }
+
+  // Responsive: collapse on mobile, expand on desktop
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768;
+      setOpenSections({
+        forums: !isMobile,
+        polls: !isMobile,
+        links: !isMobile,
+        hashtags: !isMobile,
+        business: !isMobile,
+      });
+    }
+  }, []);
+
+  const toggleSection = (key: keyof typeof openSections) => {
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  React.useEffect(() => {
+    // Fetch latest polls
+    setLoadingPolls(true);
+    kyInstance.get("/api/polls?take=5").json<{ polls: any[] }>()
+      .then((data) => setLatestPolls(data.polls.slice(0, 5)))
+      .catch(() => setLatestPolls([]))
+      .finally(() => setLoadingPolls(false));
+    // Fetch latest forums
+    setLoadingForums(true);
+    kyInstance.get("/api/forum-polls?take=5").json<{ polls: any[] }>()
+      .then((data) => setLatestForums(data.polls.slice(0, 5)))
+      .catch(() => setLatestForums([]))
+      .finally(() => setLoadingForums(false));
+  }, []);
 
   return (
     <footer className="bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 border-t border-slate-200 dark:border-slate-800 mt-12">
@@ -163,87 +227,153 @@ const toast = useToast();
         </div>
 
         {/* Footer Links */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Latest Forums */}
           <div>
-            <h4 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <MessageSquare className="h-4 w-4 text-primary" />
-              Latest Forums
-            </h4>
-            <ul className="space-y-2">
-              {latestForums.map((forum, index) => (
-                <li key={index}>
-                  <Link
-                    href={`/forums/${forum.toLowerCase().replace(/\s+/g, "-")}`}
-                    className="text-muted-foreground hover:text-primary hover:underline flex items-center gap-2"
-                  >
-                    <ArrowRight className="h-3 w-3" />
-                    {forum}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <button
+              className="flex items-center w-full justify-between mb-4 text-lg font-semibold gap-2"
+              onClick={() => toggleSection('forums')}
+              aria-expanded={openSections.forums}
+            >
+              <span className="flex items-center gap-2"><MessageSquare className="h-4 w-4 text-primary" /> Latest Forums</span>
+              <ChevronDown className={`h-5 w-5 transition-transform ${openSections.forums ? '' : 'rotate-180'}`} />
+            </button>
+            {openSections.forums && (
+              <ul className="space-y-2">
+                {loadingForums ? (
+                  <li className="flex justify-center py-2"><Loader2 className="h-5 w-5 animate-spin text-primary" /></li>
+                ) : latestForums.length === 0 ? (
+                  <li className="text-muted-foreground">No forums found.</li>
+                ) : (
+                  latestForums.map((forum, index) => (
+                    <li key={forum.id}>
+                      <Link
+                        href={`/forums/${forum.id}`}
+                        className="text-muted-foreground hover:text-primary hover:underline flex items-center gap-2"
+                      >
+                        <ArrowRight className="h-3 w-3" />
+                        {forum.title}
+                      </Link>
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
           </div>
 
           {/* Latest Polls */}
           <div>
-            <h4 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <BarChart2 className="h-4 w-4 text-primary" />
-              Latest Polls
-            </h4>
-            <ul className="space-y-2">
-              {latestPolls.map((poll, index) => (
-                <li key={index}>
-                  <Link
-                    href={`/polls/${poll.toLowerCase().replace(/\s+/g, "-")}`}
-                    className="text-muted-foreground hover:text-primary hover:underline flex items-center gap-2"
-                  >
-                    <ArrowRight className="h-3 w-3" />
-                    {poll}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <button
+              className="flex items-center w-full justify-between mb-4 text-lg font-semibold gap-2"
+              onClick={() => toggleSection('polls')}
+              aria-expanded={openSections.polls}
+            >
+              <span className="flex items-center gap-2"><BarChart2 className="h-4 w-4 text-primary" /> Latest Polls</span>
+              <ChevronDown className={`h-5 w-5 transition-transform ${openSections.polls ? '' : 'rotate-180'}`} />
+            </button>
+            {openSections.polls && (
+              <ul className="space-y-2">
+                {loadingPolls ? (
+                  <li className="flex justify-center py-2"><Loader2 className="h-5 w-5 animate-spin text-primary" /></li>
+                ) : latestPolls.length === 0 ? (
+                  <li className="text-muted-foreground">No polls found.</li>
+                ) : (
+                  latestPolls.map((poll, index) => (
+                    <li key={poll.id}>
+                      <Link
+                        href={`/polls/${poll.id}`}
+                        className="text-muted-foreground hover:text-primary hover:underline flex items-center gap-2"
+                      >
+                        <ArrowRight className="h-3 w-3" />
+                        {poll.title}
+                      </Link>
+                    </li>
+                  ))
+                )}
+              </ul>
+            )}
           </div>
 
           {/* Links */}
           <div>
-            <h4 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <LinkIcon className="h-4 w-4 text-primary" />
-              Links
-            </h4>
-            <ul className="space-y-2">
-              {usefulLinks.map((link, index) => (
-                <li key={index}>
-                  <Link
-                    href={link.href}
-                    className="text-muted-foreground hover:text-primary hover:underline flex items-center gap-2"
-                  >
-                    <ArrowRight className="h-3 w-3" />
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <button
+              className="flex items-center w-full justify-between mb-4 text-lg font-semibold gap-2"
+              onClick={() => toggleSection('links')}
+              aria-expanded={openSections.links}
+            >
+              <span className="flex items-center gap-2"><LinkIcon className="h-4 w-4 text-primary" /> Links</span>
+              <ChevronDown className={`h-5 w-5 transition-transform ${openSections.links ? '' : 'rotate-180'}`} />
+            </button>
+            {openSections.links && (
+              <ul className="space-y-2">
+                {usefulLinks.map((link, index) => (
+                  <li key={index}>
+                    <Link
+                      href={link.href}
+                      className="text-muted-foreground hover:text-primary hover:underline flex items-center gap-2"
+                    >
+                      <ArrowRight className="h-3 w-3" />
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* Trending Hashtags */}
           <div>
-            <h4 className="text-lg font-semibold flex items-center gap-2 mb-4">
-              <Hash className="h-4 w-4 text-primary" />
-              Trending Hashtags
-            </h4>
-            <div className="flex flex-wrap gap-2">
-              {trendingHashtags.map((tag, index) => (
-                <Link
-                  key={index}
-                  href={`/tags/${tag.toLowerCase().replace(/\s+/g, "")}`}
-                  className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm hover:bg-primary hover:text-white transition-colors"
-                >
-                  #{tag}
-                </Link>
-              ))}
-            </div>
+            <button
+              className="flex items-center w-full justify-between mb-4 text-lg font-semibold gap-2"
+              onClick={() => toggleSection('hashtags')}
+              aria-expanded={openSections.hashtags}
+            >
+              <span className="flex items-center gap-2"><Hash className="h-4 w-4 text-primary" /> Trending Hashtags</span>
+              <ChevronDown className={`h-5 w-5 transition-transform ${openSections.hashtags ? '' : 'rotate-180'}`} />
+            </button>
+            {openSections.hashtags && (
+              <div className="flex flex-wrap gap-2">
+                {trendingHashtags.map((tag, index) => (
+                  <Link
+                    key={index}
+                    href={`/tags/${tag.toLowerCase().replace(/\s+/g, "")}`}
+                    className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm hover:bg-primary hover:text-white transition-colors"
+                  >
+                    #{tag}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Businesses & Organizations (Map Links) */}
+          <div>
+            <button
+              className="flex items-center w-full justify-between mb-4 text-lg font-semibold gap-2"
+              onClick={() => toggleSection('business')}
+              aria-expanded={openSections.business}
+            >
+              <span className="flex items-center gap-2"><LinkIcon className="h-4 w-4 text-primary" /> Businesses & Orgs</span>
+              <ChevronDown className={`h-5 w-5 transition-transform ${openSections.business ? '' : 'rotate-180'}`} />
+            </button>
+            {openSections.business && (
+              <ul className="space-y-2">
+                {businessLinks.map((biz, idx) => (
+                  <li key={idx} className="flex flex-col gap-1">
+                    <span className="font-medium">{biz.name}</span>
+                    <span className="text-xs text-muted-foreground">{biz.address}</span>
+                    <a
+                      href={biz.map}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-sm flex items-center gap-1"
+                    >
+                      View on Map <ArrowRight className="h-3 w-3" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
 

@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { ChevronDown } from "lucide-react"
+import { useCategoryStore } from "./categoryStore"
 
 export default function MiniNav() {
   const pathname = usePathname()
@@ -24,70 +25,8 @@ export default function MiniNav() {
     { label: "Stories", href: "/stories" },
   ]
 
-  // Category filters with sub-links
-  const categoryLinks = [
-    { 
-      label: "Politics", 
-      href: "/?category=politics",
-      subLinks: [
-        { label: "Elections", href: "/?category=politics&subcategory=elections" },
-        { label: "Policy", href: "/?category=politics&subcategory=policy" },
-        { label: "International", href: "/?category=politics&subcategory=international" }
-      ]
-    },
-    { 
-      label: "AfroVideo", 
-      href: "/?category=video",
-      subLinks: [
-        { label: "News", href: "/?category=video&subcategory=news" },
-        { label: "Entertainment", href: "/?category=video&subcategory=entertainment" }
-      ]
-    },
-    { 
-      label: "Business", 
-      href: "/?category=business",
-      subLinks: [
-        { label: "Markets", href: "/?category=business&subcategory=markets" },
-        { label: "Economy", href: "/?category=business&subcategory=economy" },
-        { label: "Startups", href: "/?category=business&subcategory=startups" }
-      ]
-    },
-    { 
-      label: "Sports", 
-      href: "/?category=sports",
-      subLinks: [
-        { label: "Football", href: "/?category=sports&subcategory=football" },
-        { label: "Basketball", href: "/?category=sports&subcategory=basketball" },
-        { label: "Athletics", href: "/?category=sports&subcategory=athletics" }
-      ]
-    },
-    { 
-      label: "Technology", 
-      href: "/?category=technology",
-      subLinks: [
-        { label: "Gadgets", href: "/?category=technology&subcategory=gadgets" },
-        { label: "Software", href: "/?category=technology&subcategory=software" },
-        { label: "Innovation", href: "/?category=technology&subcategory=innovation" }
-      ]
-    },
-    { 
-      label: "Entertainment", 
-      href: "/?category=entertainment",
-      subLinks: [
-        { label: "Music", href: "/?category=entertainment&subcategory=music" },
-        { label: "Movies", href: "/?category=entertainment&subcategory=movies" },
-        { label: "Celebrities", href: "/?category=entertainment&subcategory=celebrities" }
-      ]
-    },
-    { 
-      label: "Corporate Media Hub", 
-      href: "/?category=corporate_media",
-      subLinks: [
-        { label: "Press Releases", href: "/?category=corporate_media&subcategory=press" },
-        { label: "Events", href: "/?category=corporate_media&subcategory=events" }
-      ]
-    },
-  ]
+  // Get categories and sub-links from Zustand store
+  const categories = useCategoryStore((state) => state.categories)
 
   // Check if a path is active
   const isPathActive = (href: string) => {
@@ -98,9 +37,8 @@ export default function MiniNav() {
   }
 
   // Check if a category is active
-  const isCategoryActive = (href: string) => {
-    const categoryParam = href.split('=')[1];
-    return searchParams.get('category') === categoryParam;
+  const isCategoryActive = (label: string) => {
+    return currentCategory === label.toLowerCase();
   }
 
   return (
@@ -139,19 +77,20 @@ export default function MiniNav() {
 
             {/* Category Links with Dropdowns */}
             <div className="w-full flex flex-wrap justify-center py-1 border-t dark:border-gray-800">
-              {categoryLinks.map((category) => {
-                const isActive = isCategoryActive(category.href);
+              {categories.map((category) => {
+                const isActive = isCategoryActive(category.label);
                 const isHovered = hoveredCategory === category.label;
+                const categoryHref = `/?category=${category.label.toLowerCase()}`;
 
                 return (
                   <div 
-                    key={category.href}
+                    key={category.label}
                     className="relative"
                     onMouseEnter={() => setHoveredCategory(category.label)}
                     onMouseLeave={() => setHoveredCategory(null)}
                   >
                     <Link
-                      href={category.href}
+                      href={categoryHref}
                       className={cn(
                         "relative px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 mx-1 rounded-md flex items-center gap-1",
                         isActive
@@ -160,7 +99,9 @@ export default function MiniNav() {
                       )}
                     >
                       {category.label}
-                      <ChevronDown className={cn("h-4 w-4 transition-transform", isHovered && "transform rotate-180")} />
+                      {category.subLinks.length > 0 && (
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", isHovered && "transform rotate-180")} />
+                      )}
 
                       {isActive && (
                         <div
@@ -170,15 +111,15 @@ export default function MiniNav() {
                     </Link>
 
                     {/* Dropdown menu */}
-                    {isHovered && (
+                    {isHovered && category.subLinks.length > 0 && (
                       <div 
                         className="absolute z-50 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-100 dark:border-gray-700"
                         style={{ pointerEvents: 'auto' }}
                       >
                         {category.subLinks.map((subLink) => (
                           <Link
-                            key={subLink.href}
-                            href={subLink.href}
+                            key={subLink.label}
+                            href={`/?category=${category.label.toLowerCase()}&subcategory=${subLink.label.toLowerCase()}`}
                             className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-emerald-500 dark:hover:text-emerald-400"
                           >
                             {subLink.label}
