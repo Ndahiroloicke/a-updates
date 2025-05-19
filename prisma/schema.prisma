@@ -7,113 +7,6 @@ datasource db {
   url      = "postgresql://neondb_owner:npg_8Dby7CrnIKPX@ep-plain-darkness-a22pbk2t-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
 }
 
-// Define all enums first
-enum Role {
-  USER
-  PUBLISHER
-  ADMIN
-}
-
-enum Category {
-  POLITICS
-  BUSINESS
-  TECHNOLOGY
-  SCIENCE
-  HEALTH
-  SPORTS
-  ENTERTAINMENT
-  LIFESTYLE
-  WORLD
-  EDUCATION
-  ENVIRONMENT
-  TRAVEL
-  FOOD
-  FASHION
-  ART
-  CULTURE
-  RELIGION
-  CRIME
-  OPINION
-  ANALYSIS
-  LOCAL
-  NATIONAL
-  GLOBAL
-  HISTORY
-  WEATHER
-  FINANCE
-  REAL_ESTATE
-  STARTUPS
-  AUTOMOTIVE
-  CAREER
-  LAW
-  PHOTOGRAPHY
-  VIDEOGRAPHY
-  ANIMALS
-  AGRICULTURE
-  GAMING
-  CELEBRITY
-  CORPORATE_MEDIA
-}
-
-enum MediaType {
-  IMAGE
-  VIDEO
-  DOCUMENT
-  OTHER
-}
-
-enum NotificationType {
-  LIKE
-  FOLLOW
-  COMMENT
-  BECOME_PUBLISHER
-}
-
-enum RequestStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum AdRegion {
-  LOCAL
-  MULTI_COUNTRY
-  ALL_AFRICA
-}
-
-enum AdStatus {
-  PENDING
-  ACTIVE
-  EXPIRED
-  REJECTED
-}
-
-enum AdDurationType {
-  MINUTES
-  HOURS
-  DAYS
-  WEEKS
-  MONTHS
-}
-
-enum AdPlacement {
-  RIGHT_COLUMN_TOP
-  RIGHT_COLUMN_MIDDLE
-  RIGHT_COLUMN_BOTTOM
-  BELOW_FOOTER
-  IN_FEED
-  FULL_PAGE_TAKEOVER
-}
-
-enum AdFormat {
-  BANNER
-  SIDEBAR
-  IN_FEED
-  FULL_PAGE
-  MOBILE
-}
-
-// Define models after enums
 model paymentSession {
   id              String          @id @default(cuid())
   userId          String
@@ -121,8 +14,8 @@ model paymentSession {
   createdAt       DateTime        @default(now())
   paymentMethod   String
   status          String
-  user            User            @relation("UserPayments", fields: [userId], references: [id])
   Advertisement   Advertisement[]
+  user            User            @relation("UserPayments", fields: [userId], references: [id])
 
   @@index([userId])
 }
@@ -139,6 +32,8 @@ model User {
   role                  Role               @default(USER)
   createdAt             DateTime           @default(now())
   hasPaid               Boolean?           @default(false)
+  Advertisement         Advertisement[]
+  AdvertiserProfile     AdvertiserProfile?
   bookmarks             Bookmark[]
   comments              Comment[]
   following             Follow[]           @relation("Following")
@@ -147,15 +42,13 @@ model User {
   issuedNotifications   Notification[]     @relation("Issuer")
   receivedNotifications Notification[]     @relation("Recipient")
   payments              paymentSession[]   @relation("UserPayments")
+  polls                 Poll[]
   posts                 Post[]
   PublisherProfile      PublisherProfile?
   PublisherRequest      PublisherRequest[]
   sessions              Session[]
   Story                 Story[]
   Vote                  Vote[]
-  AdvertiserProfile     AdvertiserProfile?
-  polls                 Poll[]
-  Advertisement         Advertisement[]
 
   @@map("users")
 }
@@ -182,22 +75,21 @@ model Follow {
 model Post {
   id                  String         @id @default(cuid())
   title               String
-  type                String         @default("POST")
   description         String
   body                String?
   userId              String
   category            Category?
   createdAt           DateTime       @default(now())
   role                Role?
+  type                String         @default("POST")
+  pollId              String?        @unique
   bookmarks           Bookmark[]
   comments            Comment[]
   likes               Like[]
   linkedNotifications Notification[]
   attachments         Media[]
-  documents           Document[]
-  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   poll                Poll?          @relation(fields: [pollId], references: [id])
-  pollId              String?        @unique
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("posts")
 }
@@ -214,8 +106,8 @@ model Story {
   likes               Like[]
   linkedNotifications Notification[]
   attachments         Media          @relation("StoryThumbnail", fields: [mediaId], references: [id])
-  media               Media[]        @relation("StoryMedia")
   user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media               Media[]        @relation("StoryMedia")
 
   @@map("story")
 }
@@ -226,10 +118,10 @@ model Media {
   type          MediaType
   url           String
   createdAt     DateTime        @default(now())
+  Advertisement Advertisement[]
   post          Post?           @relation(fields: [postId], references: [id])
   Story         Story[]         @relation("StoryThumbnail")
   storyMedia    Story[]         @relation("StoryMedia")
-  Advertisement Advertisement[]
 
   @@map("post_media")
 }
@@ -309,7 +201,6 @@ model Notification {
 model PublisherRequest {
   id           String         @id @default(cuid())
   userId       String
-  email        String
   status       RequestStatus
   requestedAt  DateTime       @default(now())
   respondedAt  DateTime?
@@ -323,7 +214,6 @@ model PublisherRequest {
 model PublisherProfile {
   id                    String   @id @default(cuid())
   userId                String   @unique
-  user                  User     @relation(fields: [userId], references: [id])
   firstName             String
   lastName              String
   workPhone             String
@@ -342,6 +232,7 @@ model PublisherProfile {
   paymentType           String
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id])
 
   @@map("publisher_profiles")
 }
@@ -375,30 +266,30 @@ model AdvertiserProfile {
 model Advertisement {
   id               String          @id @default(cuid())
   name             String
-  type             String
   location         String
-  region           AdRegion
-  status           AdStatus
-  startDate        DateTime
-  endDate          DateTime
-  duration         Int
-  durationType     AdDurationType
-  targetUrl        String?
-  dimensions       Json
-  price            Float
-  placement        AdPlacement
-  format           AdFormat
-  isApproved       Boolean         @default(false)
-  isPaid           Boolean         @default(false)
-  virusScanStatus  String          @default("pending")
+  type             String
+  mediaId          String
+  userId           String
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
-  userId           String
-  mediaId          String
-  user             User            @relation(fields: [userId], references: [id])
+  dimensions       Json
+  duration         Int
+  durationType     AdDurationType
+  endDate          DateTime
+  isApproved       Boolean         @default(false)
+  isPaid           Boolean         @default(false)
+  price            Float
+  region           AdRegion
+  startDate        DateTime
+  targetUrl        String?
+  virusScanStatus  String          @default("pending")
+  status           AdStatus
+  format           AdFormat
+  paymentSessionId String?
+  placement        AdPlacement
   media            Media           @relation(fields: [mediaId], references: [id])
   paymentSession   paymentSession? @relation(fields: [paymentSessionId], references: [id])
-  paymentSessionId String?
+  user             User            @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([mediaId])
@@ -419,8 +310,8 @@ model Poll {
   description String?
   createdAt   DateTime @default(now())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   options     Option[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   post        Post?
 
   @@index([userId])
@@ -444,8 +335,8 @@ model Vote {
   userId    String
   optionId  String
   createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   option    Option   @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, optionId])
   @@index([userId])
@@ -453,24 +344,116 @@ model Vote {
   @@map("votes")
 }
 
-model Document {
-  id        String   @id @default(cuid())
-  name      String
-  url       String
-  type      String // "pdf", "doc", "docx"
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model AdPricingRule {
   id           String         @id @default(cuid())
   region       AdRegion
-  position     String // e.g., "top", "sidebar", "footer"
+  position     String
   durationType AdDurationType
   basePrice    Float
   multiplier   Float
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
+}
+
+enum Role {
+  USER
+  PUBLISHER
+  ADMIN
+}
+
+enum Category {
+  POLITICS
+  BUSINESS
+  TECHNOLOGY
+  SCIENCE
+  HEALTH
+  SPORTS
+  ENTERTAINMENT
+  LIFESTYLE
+  WORLD
+  EDUCATION
+  ENVIRONMENT
+  TRAVEL
+  FOOD
+  FASHION
+  ART
+  CULTURE
+  RELIGION
+  CRIME
+  OPINION
+  ANALYSIS
+  LOCAL
+  NATIONAL
+  GLOBAL
+  HISTORY
+  WEATHER
+  FINANCE
+  REAL_ESTATE
+  STARTUPS
+  AUTOMOTIVE
+  CAREER
+  LAW
+  PHOTOGRAPHY
+  VIDEOGRAPHY
+  ANIMALS
+  AGRICULTURE
+  GAMING
+  CELEBRITY
+  CORPORATE_MEDIA
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum NotificationType {
+  LIKE
+  FOLLOW
+  COMMENT
+  BECOME_PUBLISHER
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AdRegion {
+  LOCAL
+  MULTI_COUNTRY
+  ALL_AFRICA
+}
+
+enum AdStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REJECTED
+}
+
+enum AdDurationType {
+  MINUTES
+  HOURS
+  DAYS
+  WEEKS
+  MONTHS
+}
+
+enum AdPlacement {
+  RIGHT_COLUMN_TOP
+  RIGHT_COLUMN_MIDDLE
+  RIGHT_COLUMN_BOTTOM
+  BELOW_FOOTER
+  IN_FEED
+  FULL_PAGE_TAKEOVER
+}
+
+enum AdFormat {
+  BANNER
+  SIDEBAR
+  IN_FEED
+  FULL_PAGE
+  MOBILE
 }

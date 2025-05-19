@@ -3,7 +3,7 @@
 import type React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Mail,
@@ -44,11 +44,17 @@ import {
   Building2,
   GraduationCap,
   Trash2,
+  PenSquare,
+  Clock,
+  RefreshCw,
+  AlertCircle,
+  BarChart2,
+  Building,
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Select,
@@ -58,6 +64,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useCategoryStore } from "./categoryStore";
+import { PublisherRequest } from "@prisma/client";
 
 // Update the User type to match your database schema
 interface User {
@@ -72,15 +79,22 @@ interface User {
   // Add other fields as needed
 }
 
-// Add this type definition at the top level
+// Update the Notification interface to match our API response
 interface Notification {
   id: string;
-  type: string;
+  userId: string;
   email: string;
-  description: string;
+  message: string; // Changed from description
   category: string;
-  status: "pending" | "approved" | "rejected";
-  timestamp: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  requestedAt: Date; // Changed from timestamp
+  user?: {
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+    email?: string;
+  };
 }
 
 export default function AdminPage({ userInfo }: { userInfo: User }) {
@@ -92,61 +106,178 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
   const [selectedCategory, setSelectedCategory] = useState("Tech & AI");
   const { toast } = useToast();
 
-  // Add state for notifications
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "1",
-      type: "New Publisher Request",
-      email: "james.wilson@example.com",
-      description:
-        "Tech blogger with focus on AI and machine learning. 8+ years of experience in software development.",
-      category: "Tech & AI",
-      status: "pending",
-      timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    },
-    {
-      id: "2",
-      type: "Enterprise Partnership",
-      email: "corporate@techdigest.com",
-      description:
-        "Technology news website seeking enterprise partnership. 100k+ daily active users, requesting API access.",
-      category: "Enterprise",
-      status: "pending",
-      timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    },
-    {
-      id: "3",
-      type: "Educational Institution",
-      email: "publications@edutech.edu",
-      description:
-        "Educational institution looking to publish research papers and academic content. Requesting bulk content management tools.",
-      category: "Academic",
-      status: "pending",
-      timestamp: new Date(Date.now() - 10800000).toISOString(), // 3 hours ago
-    },
-  ]);
+  // Add state for publisher request notifications from DB
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loadingNotifications, setLoadingNotifications] = useState(false);
+  
+  // Add state for user's publisher request status
+  const [publisherRequestStatus, setPublisherRequestStatus] = useState<string | null>(null);
+  const [checkingRequestStatus, setCheckingRequestStatus] = useState(false);
 
-  // Add function to scroll to notifications
+  // Function to check publisher request status
+  const checkPublisherRequestStatus = async () => {
+    try {
+      setCheckingRequestStatus(true);
+      
+      // If user is already a publisher, no need to check for requests
+      if (userInfo.role === "PUBLISHER") {
+        console.log("User is already a publisher");
+        setPublisherRequestStatus("ALREADY_PUBLISHER");
+        return;
+      }
+      
+      console.log("Checking publisher request status...");
+      
+      const response = await fetch("/api/publisher-request");
+      console.log("Status check response:", response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error checking publisher status:", errorData);
+        throw new Error(errorData.error || errorData.details || "Failed to check publisher status");
+      }
+      
+      const requests = await response.json();
+      console.log("Publisher requests data:", requests);
+      
+      if (Array.isArray(requests) && requests.length > 0) {
+        // Get the most recent request
+        const latestRequest = requests[0];
+        console.log("Latest request:", latestRequest);
+        setPublisherRequestStatus(latestRequest.status);
+      } else {
+        console.log("No existing publisher requests found");
+        setPublisherRequestStatus(null);
+      }
+    } catch (error) {
+      console.error("Error checking publisher status:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to check publisher status"
+      });
+      setPublisherRequestStatus(null);
+    } finally {
+      setCheckingRequestStatus(false);
+    }
+  };
+
+  // Fetch publisher requests on component mount (for admin only)
+  useEffect(() => {
+    if (userInfo.role === "ADMIN") {
+      fetchPublisherRequests();
+    } else {
+      // For regular users, check their publisher request status
+      checkPublisherRequestStatus();
+    }
+  }, [userInfo.role]);
+
+  // Function to fetch publisher requests
+  const fetchPublisherRequests = async () => {
+    try {
+      setLoadingNotifications(true);
+      console.log("Fetching publisher requests...");
+      
+      const response = await fetch("/api/publisher-request");
+      console.log("Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error response data:", errorData);
+        throw new Error(errorData.error || errorData.details || "Failed to fetch publisher requests");
+      }
+
+      const data = await response.json();
+      console.log("Received publisher requests:", data);
+      
+      if (!Array.isArray(data)) {
+        console.error("Expected array of publisher requests, got:", typeof data);
+        throw new Error("Invalid response format");
+      }
+
+      setNotifications(data);
+    } catch (error) {
+      console.error("Error fetching publisher requests:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to load publisher requests"
+      });
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  // Function to scroll to notifications
   const scrollToNotifications = () => {
     document
       .getElementById("notifications-section")
       ?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Add function to handle notification status updates
-  const handleNotificationAction = (
-    id: string,
-    action: "approved" | "rejected",
+  // Function to handle publisher request approval/rejection
+  const handleNotificationAction = async (
+    requestId: string,
+    action: "APPROVED" | "REJECTED",
+    notificationMessage: string = action === "APPROVED" 
+      ? "Your publisher request has been approved! You can now create and publish content."
+      : "Your publisher request has been rejected."
   ) => {
+    try {
+      setIsLoading(true);
+      console.log(`Processing ${action} for request ${requestId}`);
+
+      const response = await fetch(`/api/publisher-request/${requestId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          status: action,
+          message: notificationMessage
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error response data:", errorData);
+        throw new Error(errorData.error || errorData.details || `Failed to ${action.toLowerCase()} request`);
+      }
+
+      const updatedRequest = await response.json();
+      console.log("Request updated:", updatedRequest);
+
+      // Update the local state
     setNotifications(
       notifications.map((notif) =>
-        notif.id === id ? { ...notif, status: action } : notif,
-      ),
-    );
+          notif.id === requestId ? { ...notif, status: action } : notif
+        )
+      );
+
+      toast({
+        title: `Request ${action === "APPROVED" ? "Approved" : "Rejected"}`,
+        description: `Publisher request has been ${action === "APPROVED" ? "approved" : "rejected"} successfully.`,
+        className: action === "APPROVED" 
+          ? "bg-green-50 text-green-600 border-green-200"
+          : "bg-red-50 text-red-600 border-red-200",
+      });
+      
+      // Refresh the list after a short delay
+      setTimeout(fetchPublisherRequests, 1000);
+    } catch (error) {
+      console.error(`Error ${action.toLowerCase()} request:`, error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : `Failed to ${action.toLowerCase()} publisher request. Please try again.`
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const pendingNotifications = notifications.filter(
-    (n) => n.status === "pending",
+    (n) => n.status === "PENDING"
   ).length;
 
   const handlePayment = async () => {
@@ -183,10 +314,10 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
   };
 
   const handleSubmit = async () => {
-    if (!email || !requirements) {
+    if (!requirements) {
       toast({
         variant: "destructive",
-        description: "Please fill in all fields",
+        description: "Please fill in the requirements field",
       });
       return;
     }
@@ -194,22 +325,32 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
     try {
       setIsLoading(true);
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Create a new notification
-      const newNotification: Notification = {
-        id: (notifications.length + 1).toString(),
-        type: "New Publisher Request",
-        email: email,
-        description: requirements,
+      const response = await fetch("/api/publisher-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
         category: selectedCategory,
-        status: "pending",
-        timestamp: new Date().toISOString(),
-      };
+          requirements,
+        }),
+      });
 
-      // Add the new notification to the list
-      setNotifications([newNotification, ...notifications]);
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Check if there's a user-friendly message
+        if (data.message) {
+          toast({
+            title: "Note",
+            description: data.message,
+            className: "bg-blue-50 text-blue-700 border-blue-200",
+          });
+        } else {
+          throw new Error(data.error || "Failed to submit request");
+        }
+        return;
+      }
 
       toast({
         title: "Success!",
@@ -222,6 +363,12 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
       setEmail("");
       setRequirements("");
       setSelectedCategory("Tech & AI");
+      
+      // Instead of redirecting, update the component state to show pending status
+      if (data && data.id) {
+        // Update the status immediately to PENDING to show the pending message
+        setPublisherRequestStatus("PENDING");
+      }
     } catch (error) {
       console.error("Submission error:", error);
       toast({
@@ -293,6 +440,14 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
   // Delete sub-link
   const handleDeleteSubLink = (catIdx: number, subIdx: number) => {
     deleteSubLink(catIdx, subIdx);
+  };
+
+  // Add handlePublisherRequestRefresh to pass down to the form
+  const handlePublisherRequestRefresh = () => {
+    if (typeof window !== 'undefined') {
+      // Redirect to admin page to refresh
+      window.location.href = '/admin';
+    }
   };
 
   return (
@@ -433,177 +588,92 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
         </div>
         {userInfo.role !== "ADMIN" && (
           <>
+            {publisherRequestStatus === null && !checkingRequestStatus ? (
+              <PublisherRequestForm
+                userInfo={userInfo}
+                email={email}
+                setEmail={setEmail}
+                requirements={requirements}
+                setRequirements={setRequirements}
+                selectedCategory={selectedCategory}
+                setSelectedCategory={setSelectedCategory}
+                isLoading={isLoading}
+                handleSubmit={handleSubmit}
+                onRequestRefresh={checkPublisherRequestStatus}
+              />
+            ) : checkingRequestStatus ? (
+              <div className="mt-6 space-y-4 md:mt-8 md:space-y-6 flex justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : publisherRequestStatus === "PENDING" ? (
             <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
-              <h2 className="mb-8 text-center text-2xl font-bold">
-                Premium Publishing Features
-              </h2>
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                {/* Basic Publisher Card */}
-                <Card className="border-border bg-card text-black transition-shadow hover:shadow-xl dark:text-white">
-                  <CardContent className="p-6">
-                    <h3 className="mb-4 text-xl font-semibold">
-                      Basic Publisher
-                    </h3>
-                    <div className="mb-6 text-2xl font-bold">
-                      $9.99<span className="text-sm font-normal">/month</span>
+                <Card className="border-amber-200 bg-amber-50">
+                  <CardContent className="p-6 text-center">
+                    <Loader2 className="h-12 w-12 mx-auto text-amber-600 mb-4 animate-spin" />
+                    <h2 className="text-2xl font-bold text-amber-700 mb-2">Publisher Request Pending</h2>
+                    <p className="text-amber-600 mb-2">
+                      Your request to become a publisher is currently being reviewed by our administrators.
+                      We'll notify you once a decision has been made.
+                    </p>
+                    <div className="flex items-center justify-center mt-4 text-sm text-amber-700">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span>Usually takes 1-2 business days</span>
                     </div>
-                    <ul className="mb-6 space-y-3">
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Basic content publishing</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Standard analytics</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Community engagement tools</span>
-                      </li>
-                    </ul>
+                    
                     <Button
-                      className="w-full"
-                      onClick={() =>
-                        router.push("/publisher-registration?tier=basic")
-                      }
-                    >
-                      Get Started
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Pro Publisher Card */}
-                <Card className="scale-105 transform border-primary bg-primary/5 text-black transition-shadow hover:shadow-xl dark:text-white">
-                  <CardContent className="p-6">
-                    <h3 className="mb-4 text-xl font-semibold">
-                      Pro Publisher
-                    </h3>
-                    <div className="mb-6 text-2xl font-bold">
-                      $24.99<span className="text-sm font-normal">/month</span>
-                    </div>
-                    <ul className="mb-6 space-y-3">
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Advanced content publishing</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Premium analytics dashboard</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Corporate Media Hub access</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Priority support</span>
-                      </li>
-                    </ul>
-                    <Button
-                      variant="default"
-                      className="w-full bg-primary hover:bg-primary/90"
-                      onClick={handlePayment}
-                    >
-                      Upgrade to Pro
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                {/* Enterprise Publisher Card */}
-                <Card className="border-border bg-card text-black transition-shadow hover:shadow-xl dark:text-white">
-                  <CardContent className="p-6">
-                    <h3 className="mb-4 text-xl font-semibold">Enterprise</h3>
-                    <div className="mb-6 text-2xl font-bold">Custom</div>
-                    <ul className="mb-6 space-y-3">
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Custom publishing solutions</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Dedicated account manager</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>API access</span>
-                      </li>
-                      <li className="flex items-center">
-                        <Shield className="mr-2 h-5 w-5 text-green-500" />
-                        <span>Custom integrations</span>
-                      </li>
-                    </ul>
-                    <Button
+                      onClick={checkPublisherRequestStatus}
                       variant="outline"
-                      className="w-full"
-                      onClick={() =>
-                        router.push("/publisher-registration?tier=enterprise")
-                      }
+                      className="mt-4 border-amber-200 text-amber-600 hover:bg-amber-100"
                     >
-                      Contact Sales
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Check Status
+                    </Button>
+                  </CardContent>
+                </Card>
+                    </div>
+            ) : publisherRequestStatus === "APPROVED" || userInfo.role === "PUBLISHER" ? (
+              <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+                <Card className="border-green-200 bg-green-50">
+                  <CardContent className="p-6 text-center">
+                    <Check className="h-12 w-12 mx-auto text-green-600 mb-4" />
+                    <h2 className="text-2xl font-bold text-green-700 mb-2">You are a Publisher!</h2>
+                    <p className="text-green-600 mb-2">
+                      Your account has publisher status. You can now create and publish content.
+                    </p>
+                    <div className="mt-4">
+                    <Button
+                        variant="outline"
+                        className="border-green-200 text-green-600 hover:bg-green-100"
+                        onClick={() => window.location.href = "/posts/create"}
+                      >
+                        <PenSquare className="mr-2 h-4 w-4" />
+                        Create New Content
+                    </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : publisherRequestStatus === "REJECTED" ? (
+              <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+                <Card className="border-red-200 bg-red-50">
+                  <CardContent className="p-6 text-center">
+                    <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
+                    <h2 className="text-2xl font-bold text-red-700 mb-2">Previous Request Wasn't Approved</h2>
+                    <p className="text-red-600 mb-4">
+                      Your previous publisher request was not approved. You may submit a new request
+                      with additional information to be reconsidered.
+                    </p>
+                    <Button
+                      onClick={() => setPublisherRequestStatus(null)}
+                      className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Submit a New Request
                     </Button>
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Contact Form */}
-              <div className="mx-auto mt-8 max-w-2xl space-y-4">
-                <div>
-                  <Label htmlFor="email">Contact Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className="w-full"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select
-                    value={selectedCategory}
-                    onValueChange={setSelectedCategory}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Tech & AI">Tech & AI</SelectItem>
-                      <SelectItem value="Enterprise">Enterprise</SelectItem>
-                      <SelectItem value="Academic">Academic</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="requirements">Additional Requirements</Label>
-                  <Textarea
-                    id="requirements"
-                    placeholder="Describe your background, expertise, and specific requirements"
-                    className="h-32 w-full"
-                    value={requirements}
-                    onChange={(e) => setRequirements(e.target.value)}
-                  />
-                </div>
-
-                <Button
-                  className="w-full md:w-auto"
-                  size="lg"
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Submitting...
-                    </div>
-                  ) : (
-                    "Submit Request"
-                  )}
-                </Button>
-              </div>
-            </div>
+            ) : null}
 
             <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
               <h2 className="mb-8 text-center text-2xl font-bold">
@@ -864,19 +934,28 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                   )}
                 </div>
                 <div className="space-y-4">
-                  {notifications
+                  {loadingNotifications ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No publisher requests found.
+                    </div>
+                  ) : (
+                    notifications
                     .sort(
                       (a, b) =>
-                        new Date(b.timestamp).getTime() -
-                        new Date(a.timestamp).getTime(),
+                          new Date(b.requestedAt).getTime() -
+                          new Date(a.requestedAt).getTime(),
                     )
                     .map((notification) => (
                       <Card
                         key={notification.id}
                         className={`group overflow-hidden rounded-lg border bg-white shadow-sm transition-all ${
-                          notification.status === "pending"
+                            notification.status === "PENDING"
                             ? "border-gray-100 hover:border-green-100 hover:shadow-md"
-                            : notification.status === "approved"
+                              : notification.status === "APPROVED"
                               ? "border-green-100 bg-green-50"
                               : "border-red-100 bg-red-50"
                         }`}
@@ -911,10 +990,10 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                                         : "text-indigo-600"
                                   }`}
                                 >
-                                  {notification.type}
+                                    Publisher Request
                                 </h3>
                                 <p className="text-sm text-gray-500">
-                                  {notification.email}
+                                    {notification.user?.displayName || notification.email}
                                 </p>
                               </div>
                             </div>
@@ -931,28 +1010,30 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                             </div>
                           </div>
                           <div className="mb-4 text-sm text-gray-600">
-                            <p>{notification.description}</p>
+                              <p>{notification.message}</p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Requested: {new Date(notification.requestedAt).toLocaleString()}
+                              </p>
                           </div>
                           <div className="flex items-center justify-end space-x-2">
-                            {notification.status === "pending" ? (
+                              {notification.status === "PENDING" ? (
                               <>
                                 <Button
                                   size="sm"
                                   onClick={() => {
                                     handleNotificationAction(
                                       notification.id,
-                                      "approved",
-                                    );
-                                    toast({
-                                      title: "Request Approved",
-                                      description: `${notification.type} has been approved successfully.`,
-                                      className:
-                                        "bg-green-50 text-green-600 border-green-200",
-                                    });
+                                        "APPROVED"
+                                      );
                                   }}
                                   className="bg-green-50 text-green-600 hover:bg-green-100"
+                                    disabled={isLoading}
                                 >
+                                    {isLoading ? (
+                                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                    ) : (
                                   <Check className="mr-1 h-4 w-4" />
+                                    )}
                                   Approve
                                 </Button>
                                 <Button
@@ -960,30 +1041,29 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                                   onClick={() => {
                                     handleNotificationAction(
                                       notification.id,
-                                      "rejected",
-                                    );
-                                    toast({
-                                      title: "Request Rejected",
-                                      description: `${notification.type} has been rejected.`,
-                                      className:
-                                        "bg-red-50 text-red-600 border-red-200",
-                                    });
+                                        "REJECTED"
+                                      );
                                   }}
                                   className="bg-red-50 text-red-600 hover:bg-red-100"
+                                    disabled={isLoading}
                                 >
+                                    {isLoading ? (
+                                      <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                                    ) : (
                                   <X className="mr-1 h-4 w-4" />
+                                    )}
                                   Reject
                                 </Button>
                               </>
                             ) : (
                               <div
                                 className={`rounded-full px-4 py-1 text-sm ${
-                                  notification.status === "approved"
+                                    notification.status === "APPROVED"
                                     ? "bg-green-100 text-green-600"
                                     : "bg-red-100 text-red-600"
                                 }`}
                               >
-                                {notification.status === "approved" ? (
+                                  {notification.status === "APPROVED" ? (
                                   <span className="flex items-center">
                                     <Check className="mr-1 h-4 w-4" />
                                     Approved
@@ -999,7 +1079,8 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                      ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -1278,6 +1359,385 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
             </Link>
           </Button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// New component for Publisher Request Form with status display
+interface PublisherRequestFormProps {
+  userInfo: User;
+  email: string;
+  setEmail: (value: string) => void;
+  requirements: string;
+  setRequirements: (value: string) => void;
+  selectedCategory: string;
+  setSelectedCategory: (value: string) => void;
+  isLoading: boolean;
+  handleSubmit: () => void;
+  onRequestRefresh: () => void;
+}
+
+function PublisherRequestForm({ 
+  userInfo, 
+  email, 
+  setEmail, 
+  requirements, 
+  setRequirements,
+  selectedCategory,
+  setSelectedCategory,
+  isLoading,
+  handleSubmit,
+  onRequestRefresh
+}: PublisherRequestFormProps) {
+  const [requestStatus, setRequestStatus] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+  
+  // Check for existing publisher request or user role on mount and when role changes
+  useEffect(() => {
+    checkPublisherStatus();
+  }, [userInfo.role]);
+  
+  const checkPublisherStatus = async () => {
+    try {
+      setLoading(true);
+      
+      // First check if user is already a publisher
+      if (userInfo.role === "PUBLISHER") {
+        console.log("User is already a publisher");
+        setRequestStatus("ALREADY_PUBLISHER");
+        setLoading(false);
+        return;
+      }
+      
+      console.log("Checking publisher request status...");
+      
+      const response = await fetch("/api/publisher-request");
+      console.log("Status check response:", response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Error checking publisher status:", errorData);
+        throw new Error(errorData.error || errorData.details || "Failed to check publisher status");
+      }
+      
+      const requests = await response.json();
+      console.log("Publisher requests data:", requests);
+      
+      if (Array.isArray(requests) && requests.length > 0) {
+        // Get the most recent request
+        const latestRequest = requests[0];
+        console.log("Latest request:", latestRequest);
+        setRequestStatus(latestRequest.status);
+      } else {
+        console.log("No existing publisher requests found");
+        setRequestStatus(null);
+      }
+    } catch (error) {
+      console.error("Error checking publisher status:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to check publisher status"
+      });
+      setRequestStatus(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  if (loading) {
+    return (
+      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6 flex justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
+  // If the user is already a publisher, show success message
+  if (userInfo.role === "PUBLISHER" || requestStatus === "ALREADY_PUBLISHER") {
+    return (
+      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-6 text-center">
+            <Check className="h-12 w-12 mx-auto text-green-600 mb-4" />
+            <h2 className="text-2xl font-bold text-green-700 mb-2">You are a Publisher!</h2>
+            <p className="text-green-600 mb-2">
+              Your account has publisher status. You can now create and publish content.
+            </p>
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                className="border-green-200 text-green-600 hover:bg-green-100"
+                onClick={() => window.location.href = "/posts/create"}
+              >
+                <PenSquare className="mr-2 h-4 w-4" />
+                Create New Content
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // If there's a pending request
+  if (requestStatus === "PENDING") {
+    return (
+      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-6 text-center">
+            <Loader2 className="h-12 w-12 mx-auto text-amber-600 mb-4 animate-spin" />
+            <h2 className="text-2xl font-bold text-amber-700 mb-2">Publisher Request Pending</h2>
+            <p className="text-amber-600 mb-2">
+              Your request to become a publisher is currently being reviewed by our administrators.
+              We'll notify you once a decision has been made.
+            </p>
+            <div className="flex items-center justify-center mt-4 text-sm text-amber-700">
+              <Clock className="h-4 w-4 mr-2" />
+              <span>Usually takes 1-2 business days</span>
+            </div>
+            
+            <Button 
+              onClick={onRequestRefresh}
+              variant="outline"
+              className="mt-4 border-amber-200 text-amber-600 hover:bg-amber-100"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Check Status
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // If the request was approved
+  if (requestStatus === "APPROVED") {
+    return (
+      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-6 text-center">
+            <Check className="h-12 w-12 mx-auto text-green-600 mb-4" />
+            <h2 className="text-2xl font-bold text-green-700 mb-2">Your Request Has Been Approved!</h2>
+            <p className="text-green-600 mb-2">
+              Congratulations! Your publisher request has been approved. Please refresh the page to update your role.
+            </p>
+            <div className="mt-4">
+              <Button
+                variant="default"
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => window.location.reload()}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Page
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // If the request was rejected
+  if (requestStatus === "REJECTED") {
+    return (
+      <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="p-6 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto text-red-600 mb-4" />
+            <h2 className="text-2xl font-bold text-red-700 mb-2">Previous Request Wasn't Approved</h2>
+            <p className="text-red-600 mb-4">
+              Your previous publisher request was not approved. You may submit a new request
+              with additional information to be reconsidered.
+            </p>
+            <Button 
+              onClick={onRequestRefresh}
+              className="bg-white text-red-600 border border-red-200 hover:bg-red-50"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Submit a New Request
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show the form for new requests
+  return (
+    <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
+      <h2 className="mb-8 text-center text-2xl font-bold">
+        Premium Publishing Features
+      </h2>
+      
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-10">
+        {/* Basic Publisher */}
+        <Card className="bg-card border-border text-card-foreground">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <FileText className="mr-2 h-5 w-5 text-blue-500" />
+              Basic Publisher
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                Create and publish articles
+              </li>
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                Include media attachments
+              </li>
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                Basic analytics
+              </li>
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" className="w-full">
+              Select Basic
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">Perfect for individuals</p>
+          </CardFooter>
+        </Card>
+        
+        {/* Professional Publisher */}
+        <Card className="bg-card border-border text-card-foreground">
+          <CardHeader>
+            <div className="rounded-full bg-green-100 text-green-700 text-xs px-2 py-1 font-medium w-fit mb-2">
+              Recommended
+            </div>
+            <CardTitle className="flex items-center">
+              <BarChart2 className="mr-2 h-5 w-5 text-green-500" />
+              Professional Publisher
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                All Basic features, plus:
+              </li>
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                Advanced analytics
+              </li>
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                Scheduled publishing
+              </li>
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                Priority support
+              </li>
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <Button variant="default" className="w-full">
+              Select Professional
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">Great for professionals</p>
+          </CardFooter>
+        </Card>
+        
+        {/* Enterprise Publisher */}
+        <Card className="bg-card border-border text-card-foreground">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Building className="mr-2 h-5 w-5 text-violet-500" />
+              Enterprise Publisher
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                All Professional features, plus:
+              </li>
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                Custom branding
+              </li>
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                Team collaboration
+              </li>
+              <li className="flex items-center">
+                <Check className="mr-2 h-4 w-4 text-green-500" />
+                API access
+              </li>
+            </ul>
+          </CardContent>
+          <CardFooter>
+            <Button variant="outline" className="w-full">
+              Select Enterprise
+            </Button>
+            <p className="text-sm text-muted-foreground mt-2">For organizations</p>
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* Contact Form */}
+      <div className="mx-auto mt-8 max-w-2xl space-y-4">
+        <div>
+          <Label htmlFor="email">Contact Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Enter your email"
+            className="w-full"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="category">Category</Label>
+          <Select
+            value={selectedCategory}
+            onValueChange={setSelectedCategory}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Tech & AI">Tech & AI</SelectItem>
+              <SelectItem value="Enterprise">Enterprise</SelectItem>
+              <SelectItem value="Academic">Academic</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label htmlFor="requirements">Additional Requirements</Label>
+          <Textarea
+            id="requirements"
+            placeholder="Describe your background, expertise, and specific requirements"
+            className="h-32 w-full"
+            value={requirements}
+            onChange={(e) => setRequirements(e.target.value)}
+          />
+        </div>
+
+        <Button
+          className="w-full md:w-auto"
+          size="lg"
+          onClick={handleSubmit}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <div className="flex items-center gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Submitting...
+            </div>
+          ) : (
+            "Submit Request"
+          )}
+        </Button>
       </div>
     </div>
   );
