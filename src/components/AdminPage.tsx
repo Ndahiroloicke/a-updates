@@ -113,6 +113,45 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
   // Add state for user's publisher request status
   const [publisherRequestStatus, setPublisherRequestStatus] = useState<string | null>(null);
   const [checkingRequestStatus, setCheckingRequestStatus] = useState(false);
+  const [userNotifications, setUserNotifications] = useState<Notification[]>([]);
+  const [checkingUserNotifications, setCheckingUserNotifications] = useState(false);
+
+  // Function to check for user notifications related to publisher requests
+  const checkUserNotifications = async () => {
+    if (userInfo.role !== "USER") return;
+    
+    try {
+      setCheckingUserNotifications(true);
+      
+      const response = await fetch("/api/notifications?type=BECOME_PUBLISHER");
+      if (!response.ok) {
+        throw new Error("Failed to fetch notifications");
+      }
+      
+      const data = await response.json();
+      
+      if (Array.isArray(data) && data.length > 0) {
+        setUserNotifications(data);
+        
+        // Check if there's any approved or rejected notification
+        const mostRecentNotification = data[0];
+        if (mostRecentNotification.body && mostRecentNotification.body.toLowerCase().includes("approved")) {
+          // If notification says approved but role is still USER, show message to refresh
+          toast({
+            title: "Publisher Status Approved!",
+            description: "Your request has been approved. Please refresh the page to update your role.",
+            className: "bg-green-50 text-green-600 border-green-200",
+          });
+        } else if (mostRecentNotification.body && mostRecentNotification.body.toLowerCase().includes("rejected")) {
+          setPublisherRequestStatus("REJECTED");
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user notifications:", error);
+    } finally {
+      setCheckingUserNotifications(false);
+    }
+  };
 
   // Function to check publisher request status - only use this when needed
   const checkPublisherRequestStatus = async () => {
@@ -145,10 +184,22 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
         const latestRequest = requests[0];
         console.log("Latest request:", latestRequest);
         setPublisherRequestStatus(latestRequest.status);
+        
+        // If request is approved but user role is still USER, refresh the page
+        if (latestRequest.status === "APPROVED" && userInfo.role === "USER") {
+          toast({
+            title: "Publisher Status Approved!",
+            description: "Your request has been approved. Please refresh the page to update your role.",
+            className: "bg-green-50 text-green-600 border-green-200",
+          });
+        }
       } else {
         console.log("No existing publisher requests found");
         setPublisherRequestStatus(null);
       }
+      
+      // Also check for notifications
+      await checkUserNotifications();
     } catch (error) {
       console.error("Error checking publisher status:", error);
       toast({
@@ -167,9 +218,8 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
     if (userInfo.role === "ADMIN") {
       fetchPublisherRequests();
     } else if (userInfo.role === "USER") {
-      // For regular users, only check if they have a rejected request when needed
-      // Instead of checking on component mount, we'll let them check manually
-      setPublisherRequestStatus(null);
+      // For regular users, check notifications to see if they've been rejected
+      checkUserNotifications();
     }
   }, [userInfo.role]);
 
