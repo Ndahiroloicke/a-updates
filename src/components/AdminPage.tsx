@@ -215,7 +215,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
 
   // Fetch publisher requests on component mount (for admin only)
   useEffect(() => {
-    if (userInfo.role === "ADMIN") {
+    if (userInfo.role === "ADMIN" || userInfo.role === "SUB_ADMIN") {
       fetchPublisherRequests();
     } else if (userInfo.role === "USER") {
       // For regular users, check notifications to see if they've been rejected
@@ -510,7 +510,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
               Welcome: <span className="text-primary">{userInfo.username}</span>
             </h1>
           </header>
-          {userInfo.role === "ADMIN" && pendingNotifications > 0 && (
+          {(userInfo.role === "ADMIN" || userInfo.role === "SUB_ADMIN") && pendingNotifications > 0 && (
             <button
               onClick={scrollToNotifications}
               className="relative flex items-center rounded-full bg-white p-2 shadow-lg transition-all hover:shadow-xl"
@@ -806,7 +806,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
         )}
 
         {/* Admin Only Section */}
-        {userInfo.role === "ADMIN"  && (
+        {(userInfo.role === "ADMIN" || userInfo.role === "SUB_ADMIN") && (
           <div className="space-y-6">
             {/* Navigation Links */}
             <Card className="border-border bg-card text-black dark:text-white">
@@ -876,16 +876,18 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                       Users
                     </Link>
                   </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full justify-start"
-                  >
-                    <Link href="/subadmins">
-                      <Shield className="mr-2 h-4 w-4 text-green-600" />
-                      Sub-Admins
-                    </Link>
-                  </Button>
+                  {userInfo.role === "ADMIN" && (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full justify-start"
+                    >
+                      <Link href="/subadmins">
+                        <Shield className="mr-2 h-4 w-4 text-green-600" />
+                        Sub-Admins
+                      </Link>
+                    </Button>
+                  )}
                   <Button
                     asChild
                     variant="outline"

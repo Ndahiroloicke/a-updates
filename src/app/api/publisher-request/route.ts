@@ -83,14 +83,16 @@ export async function POST(request: NextRequest) {
     // Find all admin users to notify
     const adminUsers = await prisma.user.findMany({
       where: {
-        role: "ADMIN",
+        role: {
+          in: ["ADMIN", "SUB_ADMIN"]
+        },
       },
       select: {
         id: true,
       },
     });
 
-    console.log(`POST publisher request: Found ${adminUsers.length} admins to notify`);
+    console.log(`POST publisher request: Found ${adminUsers.length} admins/sub-admins to notify`);
 
     // Use transaction to ensure atomic operations
     try {
@@ -106,9 +108,9 @@ export async function POST(request: NextRequest) {
         });
         console.log(`POST publisher request: Created request with ID ${publisherRequest.id}`);
 
-        // Create notifications for admins
+        // Create notifications for admins and sub-admins
         if (adminUsers.length > 0) {
-          console.log("POST publisher request: Creating admin notifications");
+          console.log("POST publisher request: Creating admin/sub-admin notifications");
           for (const admin of adminUsers) {
             await tx.notification.create({
               data: {
@@ -181,15 +183,15 @@ export async function GET(request: NextRequest) {
 
     console.log(`GET publisher requests: User ${user.id}, role ${user.role}`);
     
-    // Check if the user is an admin
-    const isAdmin = user.role === "ADMIN";
-    console.log(`GET publisher requests: isAdmin = ${isAdmin}`);
+    // Check if the user is an admin or sub-admin
+    const isAdminOrSubAdmin = user.role === "ADMIN" || user.role === "SUB_ADMIN";
+    console.log(`GET publisher requests: isAdminOrSubAdmin = ${isAdminOrSubAdmin}`);
 
     try {
       // Construct the query based on user role
       const requests = await prisma.publisherRequest.findMany({
-        where: isAdmin 
-          ? {} // Admin can see all requests
+        where: isAdminOrSubAdmin 
+          ? {} // Admin and Sub-Admin can see all requests
           : { userId: user.id }, // Normal users can only see their own requests
         include: {
           user: {
