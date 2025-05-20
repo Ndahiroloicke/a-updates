@@ -377,8 +377,8 @@ export default function SubAdminManager() {
   const filteredSubAdmins = subAdmins.filter(
     (admin) => {
       const matchesSearch = 
-        admin.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        admin.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      admin.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         admin.email.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesRole = roleFilter === "all" || admin.role === roleFilter;
@@ -679,19 +679,19 @@ export default function SubAdminManager() {
             ) : (
               <div className="w-full overflow-x-auto">
                 <Table className="w-full">
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 hover:bg-gray-50">
-                      <TableHead className="text-gray-600">Name</TableHead>
-                      <TableHead className="text-gray-600">Role</TableHead>
-                      <TableHead className="text-gray-600">Permissions</TableHead>
-                      <TableHead className="text-gray-600">Status</TableHead>
-                      <TableHead className="text-gray-600">Last Active</TableHead>
-                      <TableHead className="text-right text-gray-600">
-                        Actions
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              <TableHeader>
+                <TableRow className="bg-gray-50 hover:bg-gray-50">
+                  <TableHead className="text-gray-600">Name</TableHead>
+                  <TableHead className="text-gray-600">Role</TableHead>
+                  <TableHead className="text-gray-600">Permissions</TableHead>
+                  <TableHead className="text-gray-600">Status</TableHead>
+                  <TableHead className="text-gray-600">Last Active</TableHead>
+                  <TableHead className="text-right text-gray-600">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                     {filteredSubAdmins.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center py-8 text-gray-500">
@@ -702,84 +702,84 @@ export default function SubAdminManager() {
                       </TableRow>
                     ) : (
                       filteredSubAdmins.map((admin) => (
-                        <TableRow key={admin.id} className="hover:bg-gray-50">
-                          <TableCell>
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {admin.displayName}
-                              </p>
-                              <p className="text-sm text-gray-500">{admin.email}</p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <Shield className="mr-2 h-4 w-4 text-green-600" />
-                              <span className="text-gray-900">
+                  <TableRow key={admin.id} className="hover:bg-gray-50">
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {admin.displayName}
+                        </p>
+                        <p className="text-sm text-gray-500">{admin.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        <Shield className="mr-2 h-4 w-4 text-green-600" />
+                        <span className="text-gray-900">
                                 {ROLES[admin.role as keyof typeof ROLES]?.label || admin.role}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {admin.permissions.map((permission) => (
-                                <span
-                                  key={permission}
-                                  className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700"
-                                >
-                                  {permission}
-                                </span>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-flex items-center rounded-full px-2 py-1 text-xs ${
-                                admin.status === "active"
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-gray-100 text-gray-700"
-                              }`}
-                            >
-                              {admin.status}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-gray-900">
-                            {new Date(admin.lastActive).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 border-gray-200 p-0 hover:bg-gray-50"
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {admin.permissions.map((permission) => (
+                          <span
+                            key={permission}
+                            className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700"
+                          >
+                            {permission}
+                          </span>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs ${
+                          admin.status === "active"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {admin.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-gray-900">
+                      {new Date(admin.lastActive).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 border-gray-200 p-0 hover:bg-gray-50"
                                 onClick={() => handleEditClick(admin)}
                                 disabled={loadingAction}
-                              >
+                        >
                                 {loadingAction && editingSubAdmin?.id === admin.id ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
-                                  <Edit className="h-4 w-4 text-gray-600" />
+                          <Edit className="h-4 w-4 text-gray-600" />
                                 )}
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 border-gray-200 p-0 text-red-600 hover:bg-red-50"
-                                onClick={() => handleRemoveSubAdmin(admin.id)}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 border-gray-200 p-0 text-red-600 hover:bg-red-50"
+                          onClick={() => handleRemoveSubAdmin(admin.id)}
                                 disabled={loadingAction}
-                              >
+                        >
                                 {loadingAction ? (
                                   <Loader2 className="h-4 w-4 animate-spin" />
                                 ) : (
-                                  <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                                 )}
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
                       ))
                     )}
-                  </TableBody>
-                </Table>
+              </TableBody>
+            </Table>
               </div>
             )}
           </div>

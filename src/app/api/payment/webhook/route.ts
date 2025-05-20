@@ -55,13 +55,30 @@ export async function POST(req: Request) {
               },
             });
           } else {
+            // For publishers, check if there's a package type in metadata
+            const packageType = session.metadata?.packageType;
+            
             await tx.user.update({
               where: { id: userId },
               data: { 
                 hasPaid: true,
-                role: 'PUBLISHER'
+                role: 'PUBLISHER',
+                publisherPackage: packageType || null // Store the package type if available
               },
             });
+            
+            // Create a record of this package purchase
+            if (packageType) {
+              await tx.publisherPackage.create({
+                data: {
+                  userId: userId,
+                  packageType: packageType,
+                  purchasedAt: new Date(),
+                  paymentSessionId: session.id,
+                  active: true
+                }
+              });
+            }
           }
         });
 

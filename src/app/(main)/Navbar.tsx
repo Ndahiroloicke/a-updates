@@ -4,6 +4,7 @@ import UserButton from "@/components/UserButton"
 import prisma from "@/lib/prisma"
 import Link from "next/link"
 import RotatingAdBanner from "@/components/RotatingAdBanner"
+import NotificationBell from "@/components/NotificationBell"
 
 interface NavbarProps {
   /**
@@ -72,6 +73,10 @@ export default async function Navbar({ hideLoginButton = false, showAdvert = fal
                   Create Post
                 </Link>
               )}
+              {/* Notification Bell for admins and sub-admins */}
+              {userInfo && (userInfo.role === "ADMIN" || userInfo.role === "SUB_ADMIN") && (
+                <NotificationBell role={userInfo.role} />
+              )}
               <UserButton />
             </>
           ) : (
@@ -79,10 +84,8 @@ export default async function Navbar({ hideLoginButton = false, showAdvert = fal
               {showAdvert ? (
                 <div className="w-[200px] sm:w-[250px] md:w-[300px]">
                   <RotatingAdBanner
-                    position="HEADER"
+                    position="IN_FEED"
                     rotationInterval={5000}
-                    width={300}
-                    height={50}
                     className="rounded-lg overflow-hidden shadow-md"
                   />
                 </div>

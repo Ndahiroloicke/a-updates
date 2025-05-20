@@ -32,6 +32,7 @@ model User {
   role                  Role               @default(USER)
   createdAt             DateTime           @default(now())
   hasPaid               Boolean?           @default(false)
+  publisherPackage      String?
   Advertisement         Advertisement[]
   AdvertiserProfile     AdvertiserProfile?
   bookmarks             Bookmark[]
@@ -49,6 +50,7 @@ model User {
   sessions              Session[]
   Story                 Story[]
   Vote                  Vote[]
+  SubAdmin              SubAdmin?
 
   @@map("users")
 }
@@ -355,10 +357,23 @@ model AdPricingRule {
   updatedAt    DateTime       @updatedAt
 }
 
+model SubAdmin {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  subRole     String
+  permissions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("sub_admins")
+}
+
 enum Role {
   USER
   PUBLISHER
   ADMIN
+  SUB_ADMIN
 }
 
 enum Category {

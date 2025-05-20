@@ -11,19 +11,13 @@ export async function GET(req: Request) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get all sub-admins with their user information
-    const subAdmins = await prisma.subAdmin.findMany({
+    // Get all users with SUB_ADMIN role instead of using subAdmin model directly
+    const subAdminUsers = await prisma.user.findMany({
+      where: {
+        role: "SUB_ADMIN",
+      },
       include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            displayName: true,
-            email: true,
-            avatarUrl: true,
-            createdAt: true,
-          }
-        }
+        SubAdmin: true,
       },
       orderBy: {
         createdAt: "desc"
@@ -31,16 +25,16 @@ export async function GET(req: Request) {
     });
 
     // Format the data to match the UI expectations
-    const formattedSubAdmins = subAdmins.map(admin => ({
-      id: admin.id,
-      userId: admin.userId,
-      username: admin.user.username,
-      displayName: admin.user.displayName,
-      email: admin.user.email,
-      role: admin.subRole,
-      permissions: admin.permissions,
+    const formattedSubAdmins = subAdminUsers.map(user => ({
+      id: user.SubAdmin?.id || '',
+      userId: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      email: user.email,
+      role: user.SubAdmin?.subRole || 'general',
+      permissions: user.SubAdmin?.permissions || [],
       status: "active", // We could add a status field to the model if needed
-      lastActive: admin.updatedAt.toISOString(),
+      lastActive: user.SubAdmin?.updatedAt.toISOString() || user.createdAt.toISOString(),
     }));
 
     return Response.json(formattedSubAdmins);
@@ -87,11 +81,17 @@ export async function POST(req: Request) {
     }
 
     // Check if the user is already a sub-admin
-    const existingSubAdmin = await prisma.subAdmin.findUnique({
-      where: { userId }
+    const existingSubAdmin = await prisma.user.findFirst({
+      where: { 
+        id: userId,
+        role: "SUB_ADMIN"
+      },
+      include: {
+        SubAdmin: true
+      }
     });
 
-    if (existingSubAdmin) {
+    if (existingSubAdmin && existingSubAdmin.SubAdmin) {
       return Response.json(
         { error: "User is already a sub-admin" },
         { status: 400 }
@@ -99,46 +99,39 @@ export async function POST(req: Request) {
     }
 
     // Create the sub-admin record and update user role in a transaction
-    const subAdmin = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Update user role
-      await tx.user.update({
+      const updatedUser = await tx.user.update({
         where: { id: userId },
         data: { role: "SUB_ADMIN" }
       });
 
       // Create sub-admin record
-      return tx.subAdmin.create({
+      const subAdmin = await tx.subAdmin.create({
         data: {
           userId,
           subRole,
           permissions,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              username: true,
-              displayName: true,
-              email: true,
-              avatarUrl: true,
-              createdAt: true,
-            }
-          }
         }
       });
+
+      return {
+        user: updatedUser,
+        subAdmin
+      };
     });
 
     // Format the response
     const formattedSubAdmin = {
-      id: subAdmin.id,
-      userId: subAdmin.userId,
-      username: subAdmin.user.username,
-      displayName: subAdmin.user.displayName,
-      email: subAdmin.user.email,
-      role: subAdmin.subRole,
-      permissions: subAdmin.permissions,
+      id: result.subAdmin.id,
+      userId: result.subAdmin.userId,
+      username: result.user.username,
+      displayName: result.user.displayName,
+      email: result.user.email,
+      role: result.subAdmin.subRole,
+      permissions: result.subAdmin.permissions,
       status: "active",
-      lastActive: subAdmin.createdAt.toISOString(),
+      lastActive: result.subAdmin.createdAt.toISOString(),
     };
 
     return Response.json(formattedSubAdmin, { status: 201 });

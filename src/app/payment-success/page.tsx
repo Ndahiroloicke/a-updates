@@ -25,6 +25,14 @@ export default function PaymentSuccess() {
         // Redirect based on payment type
         if (type === 'advertiser') {
           router.push('/upload-ad');
+        } else if (type === 'publisher') {
+          // If there's a package, add it to the query parameters
+          const packageType = searchParams.get('package');
+          if (packageType) {
+            router.push(`/admin?payment_success=true&package=${packageType}`);
+          } else {
+            router.push('/posts/create');
+          }
         } else {
           router.push('/posts/create');
         }
@@ -36,7 +44,7 @@ export default function PaymentSuccess() {
     if (sessionId) {
       storePaymentSession();
     }
-  }, [sessionId, type, router]);
+  }, [sessionId, type, router, searchParams]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -66,7 +74,7 @@ export default function PaymentSuccess() {
       </p>
 
       <p className="mt-6 text-gray-500 text-sm text-center">
-        Redirecting you to {type === 'advertiser' ? 'upload your ad' : 'create your post'}...
+        Redirecting you to {type === 'advertiser' ? 'upload your ad' : type === 'publisher' ? 'manage your package' : 'create your post'}...
       </p>
     </div>
   );

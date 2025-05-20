@@ -5,12 +5,13 @@ import NewsSidebar from "./NewsSidebar"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Edit, Users } from "lucide-react"
+import { Edit, Users, Bell, ClipboardCheck, FileCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { formatDate } from "@/lib/utils"
 import { User as LucideUser } from "lucide-react"
-import { ReactNode } from "react"
+import { ReactNode, useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useToast } from "@/components/ui/use-toast"
 
 const ads = [
   {
@@ -58,6 +59,35 @@ function DashboardCard({ title, icon, children }: DashboardCardProps) {
 
 export default function UserDashboard({ userInfo }: UserDashboardProps) {
   const router = useRouter()
+  const { toast } = useToast()
+  const [pendingRequests, setPendingRequests] = useState<number>(0)
+  const [isLoadingRequests, setIsLoadingRequests] = useState<boolean>(false)
+  
+  // Check for pending publisher requests if user is a sub-admin
+  useEffect(() => {
+    if (userInfo.role === "SUB_ADMIN") {
+      fetchPendingRequests()
+    }
+  }, [userInfo.role])
+
+  // Fetch pending publisher requests count
+  const fetchPendingRequests = async () => {
+    try {
+      setIsLoadingRequests(true)
+      const response = await fetch("/api/publisher-request")
+      
+      if (response.ok) {
+        const requests = await response.json()
+        // Filter for pending requests only
+        const pending = requests.filter(req => req.status === "PENDING")
+        setPendingRequests(pending.length)
+      }
+    } catch (error) {
+      console.error("Failed to fetch publisher requests:", error)
+    } finally {
+      setIsLoadingRequests(false)
+    }
+  }
   
   return (
     <div className="container mx-auto px-4 py-8">
@@ -105,7 +135,7 @@ export default function UserDashboard({ userInfo }: UserDashboardProps) {
           </div>
           
           {/* Add Publisher Request Button - only show if user is not already a publisher */}
-          {userInfo.role !== "PUBLISHER" && userInfo.role !== "ADMIN" && (
+          {userInfo.role !== "PUBLISHER" && userInfo.role !== "ADMIN" && userInfo.role !== "SUB_ADMIN" && (
             <div className="mt-2">
               <Button
                 size="sm"
@@ -159,6 +189,60 @@ export default function UserDashboard({ userInfo }: UserDashboardProps) {
             </Button>
           </div>
         </DashboardCard>
+
+        {/* Sub-Admin specific cards */}
+        {userInfo.role === "SUB_ADMIN" && (
+          <>
+            {/* Publisher Requests Card */}
+            <DashboardCard
+              title="Publisher Requests"
+              icon={<ClipboardCheck className="h-6 w-6 text-green-600" />}
+            >
+              <div className="space-y-2">
+                <p>Manage publisher requests from users</p>
+                {pendingRequests > 0 && (
+                  <div className="flex items-center mt-2">
+                    <Badge className="bg-green-100 text-green-700 hover:bg-green-200 border-none">
+                      {pendingRequests} pending {pendingRequests === 1 ? 'request' : 'requests'}
+                    </Badge>
+                  </div>
+                )}
+              </div>
+              <div className="mt-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full bg-green-50 text-green-600 hover:bg-green-100"
+                  onClick={() => router.push(`/subadmins/publisher-requests`)}
+                >
+                  <Bell className="mr-2 h-4 w-4" />
+                  View Requests
+                </Button>
+              </div>
+            </DashboardCard>
+
+            {/* Content Approval Card */}
+            <DashboardCard
+              title="Content Approval"
+              icon={<FileCheck className="h-6 w-6 text-blue-600" />}
+            >
+              <div className="space-y-2">
+                <p>Review and approve content submitted by publishers</p>
+              </div>
+              <div className="mt-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  onClick={() => router.push(`/subadmins/content-approval`)}
+                >
+                  <FileCheck className="mr-2 h-4 w-4" />
+                  Review Content
+                </Button>
+              </div>
+            </DashboardCard>
+          </>
+        )}
       </div>
     </div>
   )

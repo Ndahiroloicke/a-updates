@@ -774,19 +774,19 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                     <ul className="mb-8 space-y-4">
                       <li className="flex items-center">
                         <Shield className="mr-3 h-6 w-6 text-primary" />
-                        <span className="text-lg">
+                        <span className="text-gray-700">
                           Targeted ad placement across our platform
                         </span>
                       </li>
                       <li className="flex items-center">
                         <BarChart className="mr-3 h-6 w-6 text-primary" />
-                        <span className="text-lg">
+                        <span className="text-gray-700">
                           Comprehensive analytics and reporting
                         </span>
                       </li>
                       <li className="flex items-center">
                         <Globe className="mr-3 h-6 w-6 text-primary" />
-                        <span className="text-lg">
+                        <span className="text-gray-700">
                           Wide audience reach and engagement
                         </span>
                       </li>
@@ -806,7 +806,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
         )}
 
         {/* Admin Only Section */}
-        {userInfo.role === "ADMIN" && (
+        {userInfo.role === "ADMIN"  && (
           <div className="space-y-6">
             {/* Navigation Links */}
             <Card className="border-border bg-card text-black dark:text-white">
@@ -1001,15 +1001,15 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
             </Card>
 
             {/* Notifications Section */}
-            <Card id="notifications-section" className="mt-8 bg-white">
-              <CardContent className="space-y-4 pt-4">
-                <div className="flex items-center justify-between border-b pb-4">
+            <Card id="notifications-section" className="mt-8 bg-white border border-gray-200 shadow-sm rounded-xl overflow-hidden">
+              <CardContent className="space-y-4 pt-6 px-6">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-4">
                   <h2 className="flex items-center text-xl font-semibold text-green-600">
                     <Bell className="mr-2 h-5 w-5" />
                     Publisher Notifications
                   </h2>
                   {pendingNotifications > 0 && (
-                    <div className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-600">
+                    <div className="rounded-full bg-green-50 px-3 py-1 text-sm text-green-600 font-medium border border-green-100">
                       {pendingNotifications} New Requests
                     </div>
                   )}
@@ -1017,10 +1017,10 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                 <div className="space-y-4">
                   {loadingNotifications ? (
                     <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <Loader2 className="h-8 w-8 animate-spin text-green-500" />
                     </div>
                   ) : notifications.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg border border-gray-100">
                       No publisher requests found.
                     </div>
                   ) : (
@@ -1033,68 +1033,71 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                     .map((notification) => (
                       <Card
                         key={notification.id}
-                        className={`group overflow-hidden rounded-lg border bg-white shadow-sm transition-all ${
+                        className={`group overflow-hidden rounded-lg border transition-all shadow-sm ${
                             notification.status === "PENDING"
-                            ? "border-gray-100 hover:border-green-100 hover:shadow-md"
+                            ? "border-gray-200 hover:border-green-200 hover:shadow-md"
                               : notification.status === "APPROVED"
-                              ? "border-green-100 bg-green-50"
-                              : "border-red-100 bg-red-50"
+                              ? "border-green-200 bg-green-50"
+                              : "border-red-200 bg-red-50"
                         }`}
                       >
-                        <CardContent className="p-4">
-                          <div className="mb-4 flex items-center justify-between border-b border-gray-50 pb-2">
+                        <CardContent className="p-5">
+                          <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
                             <div className="flex items-center space-x-3">
                               <div
                                 className={`rounded-full p-2 ${
                                   notification.category === "Tech & AI"
-                                    ? "bg-blue-50"
+                                    ? "bg-blue-100"
                                     : notification.category === "Enterprise"
-                                      ? "bg-amber-50"
-                                      : "bg-indigo-50"
+                                      ? "bg-amber-100"
+                                      : "bg-indigo-100"
                                 }`}
                               >
                                 {notification.category === "Tech & AI" ? (
-                                  <UserPlus className="h-5 w-5 text-blue-500" />
+                                  <UserPlus className="h-5 w-5 text-blue-600" />
                                 ) : notification.category === "Enterprise" ? (
-                                  <Building2 className="h-5 w-5 text-amber-500" />
+                                  <Building2 className="h-5 w-5 text-amber-600" />
                                 ) : (
-                                  <GraduationCap className="h-5 w-5 text-indigo-500" />
+                                  <GraduationCap className="h-5 w-5 text-indigo-600" />
                                 )}
                               </div>
                               <div>
                                 <h3
                                   className={`font-medium ${
                                     notification.category === "Tech & AI"
-                                      ? "text-blue-600"
+                                      ? "text-blue-700"
                                       : notification.category === "Enterprise"
-                                        ? "text-amber-600"
-                                        : "text-indigo-600"
+                                        ? "text-amber-700"
+                                        : "text-indigo-700"
                                   }`}
                                 >
                                     Publisher Request
                                 </h3>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-sm text-gray-600">
                                     {notification.user?.displayName || notification.email}
                                 </p>
                               </div>
                             </div>
                             <div
-                              className={`rounded-full px-3 py-1 text-sm ${
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${
                                 notification.category === "Tech & AI"
-                                  ? "bg-blue-50 text-blue-600"
+                                  ? "bg-blue-100 text-blue-700"
                                   : notification.category === "Enterprise"
-                                    ? "bg-amber-50 text-amber-600"
-                                    : "bg-indigo-50 text-indigo-600"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-indigo-100 text-indigo-700"
                               }`}
                             >
                               {notification.category}
                             </div>
                           </div>
-                          <div className="mb-4 text-sm text-gray-600">
-                              <p>{notification.message}</p>
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Requested: {new Date(notification.requestedAt).toLocaleString()}
-                              </p>
+                          <div className="mb-4">
+                            <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md border border-gray-100">
+                              {notification.message}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-2 flex items-center">
+                              <Clock className="h-3 w-3 mr-1" />
+                              Requested: {new Date(notification.requestedAt).toLocaleString()}
+                            </p>
                           </div>
                           <div className="flex items-center justify-end space-x-2">
                               {notification.status === "PENDING" ? (
@@ -1107,7 +1110,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                                         "APPROVED"
                                       );
                                   }}
-                                  className="bg-green-50 text-green-600 hover:bg-green-100"
+                                  className="bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (
@@ -1125,7 +1128,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                                         "REJECTED"
                                       );
                                   }}
-                                  className="bg-red-50 text-red-600 hover:bg-red-100"
+                                  className="bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
                                     disabled={isLoading}
                                 >
                                     {isLoading ? (
@@ -1138,10 +1141,10 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
                               </>
                             ) : (
                               <div
-                                className={`rounded-full px-4 py-1 text-sm ${
+                                className={`rounded-full px-4 py-1 text-sm flex items-center ${
                                     notification.status === "APPROVED"
-                                    ? "bg-green-100 text-green-600"
-                                    : "bg-red-100 text-red-600"
+                                    ? "bg-green-100 text-green-700 border border-green-200"
+                                    : "bg-red-100 text-red-700 border border-red-200"
                                 }`}
                               >
                                   {notification.status === "APPROVED" ? (
@@ -1471,180 +1474,311 @@ function PublisherRequestForm({
   handleSubmit,
   onRequestRefresh
 }: PublisherRequestFormProps) {
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const { toast } = useToast();
+
+  // Handle package selection and payment
+  const handlePackageSelect = async (packageType: string) => {
+    try {
+      setSelectedPackage(packageType);
+      setIsProcessingPayment(true);
+      
+      const response = await fetch("/api/payment/package-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          packageType,
+          paymentType: "payment" // One-time payment for simplicity
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Payment initiation failed");
+      }
+
+      const data = await response.json();
+      if (data.url) {
+        // Store the selected package in localStorage before redirecting
+        localStorage.setItem('selectedPublisherPackage', packageType);
+        window.location.href = data.url; // Redirect to Stripe Checkout
+        return;
+      }
+
+      throw new Error("Payment URL not received");
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast({
+        variant: "destructive",
+        title: "Payment Error",
+        description: error instanceof Error ? error.message : "Failed to initiate payment. Please try again."
+      });
+      setSelectedPackage(null);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // Check if returning from payment success
+    const checkPaymentStatus = () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('payment_success') === 'true' && params.get('package')) {
+        const packageType = params.get('package');
+        if (packageType) {
+          setSelectedPackage(packageType);
+          toast({
+            title: "Payment Successful!",
+            description: `You are now a ${packageType.charAt(0).toUpperCase() + packageType.slice(1)} Publisher`,
+            className: "bg-green-50 text-green-700"
+          });
+        }
+      }
+    };
+    
+    // Check if there's a saved package selection
+    const savedPackage = localStorage.getItem('selectedPublisherPackage');
+    if (savedPackage) {
+      setSelectedPackage(savedPackage);
+    }
+    
+    checkPaymentStatus();
+  }, [toast]);
+
   // Show the form for new requests (simplify since parent component handles status)
   return (
-    <div className="mt-6 space-y-4 md:mt-8 md:space-y-6">
-      <h2 className="mb-8 text-center text-2xl font-bold">
+    <div className="mt-6 space-y-8 md:mt-8 md:space-y-10 bg-gradient-to-b from-white to-gray-50 rounded-xl p-8 shadow-sm">
+      <h2 className="text-center text-3xl font-bold text-gray-800 mb-2">
         Premium Publishing Features
       </h2>
+      <p className="text-center text-gray-500 max-w-2xl mx-auto">
+        Choose the publishing plan that best suits your needs and submit your application to join our content creator community.
+      </p>
       
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-10">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mb-12 mt-8">
         {/* Basic Publisher */}
-        <Card className="bg-card border-border text-card-foreground">
-          <CardHeader>
-            <CardTitle className="flex items-center">
+        <Card className={`bg-white border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${selectedPackage === 'basic' ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`}>
+          <div className="absolute top-0 left-0 w-full h-1 bg-blue-500"></div>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-xl text-blue-600">
               <FileText className="mr-2 h-5 w-5 text-blue-500" />
               Basic Publisher
             </CardTitle>
+            <div className="mt-2 text-xl font-bold text-gray-900">$49.99</div>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-sm">
+          <CardContent className="pb-6">
+            <ul className="space-y-3 text-sm">
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Create and publish articles
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Create and publish articles</span>
               </li>
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Include media attachments
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Include media attachments</span>
               </li>
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Basic analytics
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Basic analytics</span>
               </li>
             </ul>
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full">
-              Select Basic
+          <CardFooter className="flex flex-col items-stretch pt-0">
+            <Button 
+              variant="outline" 
+              className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
+              onClick={() => handlePackageSelect('basic')}
+              disabled={isProcessingPayment || selectedPackage === 'basic'}
+            >
+              {isProcessingPayment && selectedPackage === 'basic' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : selectedPackage === 'basic' ? (
+                'Selected'
+              ) : (
+                'Select Basic'
+              )}
             </Button>
-            <p className="text-sm text-muted-foreground mt-2">Perfect for individuals</p>
+            <p className="text-sm text-gray-500 mt-2 self-center">Perfect for individuals</p>
           </CardFooter>
         </Card>
         
         {/* Professional Publisher */}
-        <Card className="bg-card border-border text-card-foreground">
-          <CardHeader>
-            <div className="rounded-full bg-green-100 text-green-700 text-xs px-2 py-1 font-medium w-fit mb-2">
+        <Card className={`bg-white border shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-1 relative ${selectedPackage === 'professional' ? 'border-green-500 ring-2 ring-green-200' : 'border-green-200'}`}>
+          <div className="absolute top-0 left-0 w-full h-1 bg-green-500"></div>
+          <CardHeader className="pb-2">
+            <div className="rounded-full bg-green-100 text-green-700 text-xs px-3 py-1 font-medium w-fit mb-2">
               Recommended
             </div>
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center text-xl text-green-600">
               <BarChart2 className="mr-2 h-5 w-5 text-green-500" />
               Professional Publisher
             </CardTitle>
+            <div className="mt-2 text-xl font-bold text-gray-900">$99.99</div>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-sm">
+          <CardContent className="pb-6">
+            <ul className="space-y-3 text-sm">
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                All Basic features, plus:
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">All Basic features, plus:</span>
               </li>
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Advanced analytics
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Advanced analytics</span>
               </li>
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Scheduled publishing
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Scheduled publishing</span>
               </li>
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Priority support
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Priority support</span>
               </li>
             </ul>
           </CardContent>
-          <CardFooter>
-            <Button variant="default" className="w-full">
-              Select Professional
+          <CardFooter className="flex flex-col items-stretch pt-0">
+            <Button 
+              variant="default" 
+              className="w-full bg-green-600 hover:bg-green-700"
+              onClick={() => handlePackageSelect('professional')}
+              disabled={isProcessingPayment || selectedPackage === 'professional'}
+            >
+              {isProcessingPayment && selectedPackage === 'professional' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : selectedPackage === 'professional' ? (
+                'Selected'
+              ) : (
+                'Select Professional'
+              )}
             </Button>
-            <p className="text-sm text-muted-foreground mt-2">Great for professionals</p>
+            <p className="text-sm text-gray-500 mt-2 self-center">Great for professionals</p>
           </CardFooter>
         </Card>
         
         {/* Enterprise Publisher */}
-        <Card className="bg-card border-border text-card-foreground">
-          <CardHeader>
-            <CardTitle className="flex items-center">
+        <Card className={`bg-white border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${selectedPackage === 'enterprise' ? 'border-violet-500 ring-2 ring-violet-200' : 'border-gray-200'}`}>
+          <div className="absolute top-0 left-0 w-full h-1 bg-violet-500"></div>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center text-xl text-violet-600">
               <Building className="mr-2 h-5 w-5 text-violet-500" />
               Enterprise Publisher
             </CardTitle>
+            <div className="mt-2 text-xl font-bold text-gray-900">$199.99</div>
           </CardHeader>
-          <CardContent>
-            <ul className="space-y-2 text-sm">
+          <CardContent className="pb-6">
+            <ul className="space-y-3 text-sm">
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                All Professional features, plus:
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">All Professional features, plus:</span>
               </li>
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Custom branding
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Custom branding</span>
               </li>
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                Team collaboration
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">Team collaboration</span>
               </li>
               <li className="flex items-center">
-                <Check className="mr-2 h-4 w-4 text-green-500" />
-                API access
+                <Check className="mr-2 h-4 w-4 text-green-500 flex-shrink-0" />
+                <span className="text-gray-700">API access</span>
               </li>
             </ul>
           </CardContent>
-          <CardFooter>
-            <Button variant="outline" className="w-full">
-              Select Enterprise
+          <CardFooter className="flex flex-col items-stretch pt-0">
+            <Button 
+              variant="outline" 
+              className="w-full border-violet-200 text-violet-600 hover:bg-violet-50"
+              onClick={() => handlePackageSelect('enterprise')}
+              disabled={isProcessingPayment || selectedPackage === 'enterprise'}
+            >
+              {isProcessingPayment && selectedPackage === 'enterprise' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : selectedPackage === 'enterprise' ? (
+                'Selected'
+              ) : (
+                'Select Enterprise'
+              )}
             </Button>
-            <p className="text-sm text-muted-foreground mt-2">For organizations</p>
+            <p className="text-sm text-gray-500 mt-2 self-center">For organizations</p>
           </CardFooter>
         </Card>
       </div>
 
-      {/* Contact Form */}
-      <div className="mx-auto mt-8 max-w-2xl space-y-4">
-        <div>
-          <Label htmlFor="email">Contact Email</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="Enter your email"
-            className="w-full"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+      {/* Contact Form - Only show if a package is selected */}
+      {selectedPackage && (
+        <div className="mx-auto max-w-2xl space-y-5 bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+          <h3 className="text-xl font-semibold text-center mb-5 text-gray-800">Complete Your Publisher Application</h3>
+          
+          <div>
+            <Label htmlFor="email" className="text-sm font-medium text-gray-700 mb-1 block">Contact Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              className="w-full border-gray-300 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition text-gray-700"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
-        <div>
-          <Label htmlFor="category">Category</Label>
-          <Select
-            value={selectedCategory}
-            onValueChange={setSelectedCategory}
+          <div>
+            <Label htmlFor="category" className="text-sm font-medium text-gray-700 mb-1 block">Category</Label>
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
+              <SelectTrigger className="w-full border-gray-300 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition text-gray-700">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Tech & AI">Tech & AI</SelectItem>
+                <SelectItem value="Enterprise">Enterprise</SelectItem>
+                <SelectItem value="Academic">Academic</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="requirements" className="text-sm font-medium text-gray-700 mb-1 block">Additional Requirements</Label>
+            <Textarea
+              id="requirements"
+              placeholder="Describe your background, expertise, and specific requirements"
+              className="h-32 w-full border-gray-300 focus:border-green-500 focus:ring-1 focus:ring-green-500 transition text-gray-700"
+              value={requirements}
+              onChange={(e) => setRequirements(e.target.value)}
+            />
+          </div>
+
+          <Button
+            className="w-full bg-green-600 hover:bg-green-700 transition py-6 mt-4"
+            size="lg"
+            onClick={handleSubmit}
+            disabled={isLoading}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Tech & AI">Tech & AI</SelectItem>
-              <SelectItem value="Enterprise">Enterprise</SelectItem>
-              <SelectItem value="Academic">Academic</SelectItem>
-            </SelectContent>
-          </Select>
+            {isLoading ? (
+              <div className="flex items-center gap-2 justify-center">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                Submitting...
+              </div>
+            ) : (
+              <div className="flex items-center justify-center">
+                <Send className="mr-2 h-5 w-5" />
+                Submit Publisher Request
+              </div>
+            )}
+          </Button>
         </div>
-
-        <div>
-          <Label htmlFor="requirements">Additional Requirements</Label>
-          <Textarea
-            id="requirements"
-            placeholder="Describe your background, expertise, and specific requirements"
-            className="h-32 w-full"
-            value={requirements}
-            onChange={(e) => setRequirements(e.target.value)}
-          />
-        </div>
-
-        <Button
-          className="w-full md:w-auto"
-          size="lg"
-          onClick={handleSubmit}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Submitting...
-            </div>
-          ) : (
-            "Submit Request"
-          )}
-        </Button>
-      </div>
+      )}
     </div>
   );
 }

@@ -13,12 +13,12 @@ export async function PATCH(
     const requestId = params.id;
     console.log(`PATCH publisher request: ID ${requestId}`);
     
-    // Validate the user is an admin
+    // Validate the user is an admin or sub-admin
     const { user } = await validateRequest();
-    if (!user || !user.id || user.role !== "ADMIN") {
+    if (!user || !user.id || (user.role !== "ADMIN" && user.role !== "SUB_ADMIN")) {
       console.log("PATCH publisher request: Unauthorized");
       return NextResponse.json(
-        { error: "Unauthorized. Only admins can update publisher requests." },
+        { error: "Unauthorized. Only admins and sub-admins can update publisher requests." },
         { status: 401 }
       );
     }
@@ -105,6 +105,30 @@ export async function PATCH(
             : "Your publisher request has been rejected."),
         },
       });
+      
+      // If action was taken by a SUB_ADMIN, notify ADMINs about the action
+      if (user.role === "SUB_ADMIN") {
+        const adminUsers = await prisma.user.findMany({
+          where: { role: "ADMIN" },
+          select: { id: true }
+        });
+        
+        if (adminUsers.length > 0) {
+          const actionText = requestStatus === RequestStatus.APPROVED ? "approved" : "rejected";
+          
+          for (const admin of adminUsers) {
+            await prisma.notification.create({
+              data: {
+                recipientId: admin.id,
+                issuerId: user.id,
+                type: NotificationType.BECOME_PUBLISHER,
+                body: `Sub-admin ${user.displayName} has ${actionText} a publisher request from ${publisherRequest.user.displayName}.`,
+                publisherRequestId: publisherRequest.id,
+              },
+            });
+          }
+        }
+      }
 
       // Transform the response to match expected format in the frontend
       const transformedRequest = {
