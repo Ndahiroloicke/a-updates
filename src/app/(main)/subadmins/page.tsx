@@ -5,8 +5,8 @@ import Link from "next/link";
 
 export default function SubAdminsPage() {
   return (
-    <div className="min-h-screen p-6">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen w-full">
+      <div className="w-full">
         <div className="mb-6">
           <Button
             asChild

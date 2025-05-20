@@ -118,7 +118,7 @@ export default async function Layout({
             </div>
           </div>
         </div>
-        <div className="mx-auto flex w-full grow gap-5 p-5">{children}</div>
+        <div className="w-full grow p-5">{children}</div>
       </div>
       <Footer />
     </SessionProvider>
