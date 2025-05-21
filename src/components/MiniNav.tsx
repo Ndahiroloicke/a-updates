@@ -20,8 +20,8 @@ export default function MiniNav() {
     { label: "Home", href: "/" },
     { label: "Posts", href: "/home"},
     { label: "Africa Wall", href: "/push-wall" },
+    { label: "Afro Videos", href: "/afro-video" },
     { label: "Forumn & Poll", href: "/forum-poll" },
-    { label: "Africa Map", href: "/africa-map" },
     { label: "Stories", href: "/stories" },
   ]
 
@@ -82,7 +82,7 @@ export default function MiniNav() {
                 const isHovered = hoveredCategory === category.label;
                 const categoryParams = new URLSearchParams();
                 categoryParams.set('category', category.label.toLowerCase());
-                
+
                 return (
                   <div 
                     key={category.label}
@@ -123,13 +123,13 @@ export default function MiniNav() {
                           params.set('subcategory', subLink.label.toLowerCase());
                           
                           return (
-                            <Link
-                              key={subLink.label}
+                          <Link
+                            key={subLink.label}
                               href={`/?${params.toString()}`}
-                              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-emerald-500 dark:hover:text-emerald-400"
-                            >
-                              {subLink.label}
-                            </Link>
+                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-emerald-500 dark:hover:text-emerald-400"
+                          >
+                            {subLink.label}
+                          </Link>
                           );
                         })}
                       </div>

@@ -51,6 +51,7 @@ model User {
   Story                 Story[]
   Vote                  Vote[]
   SubAdmin              SubAdmin?
+  afroVideos            AfroVideo[] // Add relation to AfroVideo model
 
   @@map("users")
 }
@@ -128,30 +129,55 @@ model Media {
   @@map("post_media")
 }
 
+model AfroVideo {
+  id           String    @id @default(cuid())
+  title        String
+  description  String
+  videoUrl     String
+  thumbnailUrl String?
+  userId       String // Only admin users can upload
+  createdAt    DateTime  @default(now())
+  views        Int       @default(0)
+  shares       Int       @default(0)
+  comments     Comment[] // Reusing existing Comment model
+  likes        Like[] // Reusing existing Like model
+  reposted     Boolean   @default(false)
+  reposts      Int       @default(0)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category?
+  duration     Int? // Video duration in seconds
+
+  @@map("afro_videos")
+}
+
 model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  userId    String
-  postId    String?
-  storyId   String?
-  createdAt DateTime @default(now())
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-  story     Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String     @id @default(cuid())
+  content     String
+  userId      String
+  postId      String?
+  storyId     String?
+  createdAt   DateTime   @default(now())
+  afroVideoId String? // Add field for AfroVideo relation
+  post        Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  story       Story?     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  afroVideo   AfroVideo? @relation(fields: [afroVideoId], references: [id], onDelete: Cascade) // Add relation to AfroVideo
 
   @@map("comments")
 }
 
 model Like {
-  id      String  @id @default(cuid())
-  userId  String
-  postId  String?
-  storyId String?
-  post    Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
-  story   Story?  @relation(fields: [storyId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String     @id @default(cuid())
+  userId      String
+  postId      String?
+  storyId     String?
+  afroVideoId String? // Add field for AfroVideo relation
+  post        Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  story       Story?     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  afroVideo   AfroVideo? @relation(fields: [afroVideoId], references: [id], onDelete: Cascade) // Add relation to AfroVideo
 
-  @@unique([userId, postId, storyId])
+  @@unique([userId, postId, storyId, afroVideoId])
   @@unique([userId, postId], name: "userId_postId")
   @@map("likes")
 }
