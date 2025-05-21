@@ -23,19 +23,75 @@ interface CategoryStore {
 export const useCategoryStore = create<CategoryStore>((set) => ({
   categories: [
     {
-      label: "Politics",
+      label: "Fashion",
       subLinks: [
-        { label: "Elections" },
-        { label: "Policy" },
-        { label: "International" },
+        { label: "Clothing" },
+        { label: "Accessories" },
+        { label: "Trends" },
       ],
     },
     {
-      label: "Sports",
+      label: "Lifestyle",
       subLinks: [
-        { label: "Football" },
-        { label: "Basketball" },
-        { label: "Athletics" },
+        { label: "Health" },
+        { label: "Wellness" },
+        { label: "Fitness" },
+      ],
+    },
+    {
+      label: "Travel",
+      subLinks: [
+        { label: "Destinations" },
+        { label: "Tips" },
+        { label: "Reviews" },
+      ],
+    },
+    {
+      label: "Finance",
+      subLinks: [
+        { label: "Investing" },
+        { label: "Savings" },
+        { label: "Markets" },
+      ],
+    },
+    {
+      label: "Education",
+      subLinks: [
+        { label: "Schools" },
+        { label: "Learning" },
+        { label: "Research" },
+      ],
+    },
+    {
+      label: "Business",
+      subLinks: [
+        { label: "Entrepreneurship" },
+        { label: "Management" },
+        { label: "Economy" },
+      ],
+    },
+    {
+      label: "Science",
+      subLinks: [
+        { label: "Research" },
+        { label: "Technology" },
+        { label: "Discoveries" },
+      ],
+    },
+    {
+      label: "Startups",
+      subLinks: [
+        { label: "Funding" },
+        { label: "Innovation" },
+        { label: "Success Stories" },
+      ],
+    },
+    {
+      label: "Environment",
+      subLinks: [
+        { label: "Conservation" },
+        { label: "Climate" },
+        { label: "Sustainability" },
       ],
     },
   ],

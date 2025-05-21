@@ -110,15 +110,15 @@ function Post({ post }: { post: PostData & { isPrioritized?: boolean } }) {
         </div>
       )}
 
-      <CardHeader className="pb-2 relative">
+      <CardHeader className={`pb-2 relative ${!post.attachments?.[0]?.url ? 'pt-12' : ''}`}>
         {!post.attachments?.[0]?.url && (
-          <>
-            <Badge className="absolute top-4 left-4 bg-primary hover:bg-primary/90">{translatedCategory}</Badge>
+          <div className="absolute top-0 left-0 right-0 h-12 flex justify-between items-center px-4">
+            <Badge className="bg-primary hover:bg-primary/90">{translatedCategory}</Badge>
             <PostMoreButton 
               post={post}
-              className="absolute top-4 right-4 text-primary"
+              className="text-primary"
             />
-          </>
+          </div>
         )}
 
         <div className="flex items-center gap-3 mb-3">

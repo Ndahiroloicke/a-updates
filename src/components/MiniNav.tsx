@@ -80,8 +80,9 @@ export default function MiniNav() {
               {categories.map((category) => {
                 const isActive = isCategoryActive(category.label);
                 const isHovered = hoveredCategory === category.label;
-                const categoryHref = `/?category=${category.label.toLowerCase()}`;
-
+                const categoryParams = new URLSearchParams();
+                categoryParams.set('category', category.label.toLowerCase());
+                
                 return (
                   <div 
                     key={category.label}
@@ -90,7 +91,7 @@ export default function MiniNav() {
                     onMouseLeave={() => setHoveredCategory(null)}
                   >
                     <Link
-                      href={categoryHref}
+                      href={`/?${categoryParams.toString()}`}
                       className={cn(
                         "relative px-3 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 mx-1 rounded-md flex items-center gap-1",
                         isActive
@@ -116,15 +117,21 @@ export default function MiniNav() {
                         className="absolute z-50 mt-1 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 border border-gray-100 dark:border-gray-700"
                         style={{ pointerEvents: 'auto' }}
                       >
-                        {category.subLinks.map((subLink) => (
-                          <Link
-                            key={subLink.label}
-                            href={`/?category=${category.label.toLowerCase()}&subcategory=${subLink.label.toLowerCase()}`}
-                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-emerald-500 dark:hover:text-emerald-400"
-                          >
-                            {subLink.label}
-                          </Link>
-                        ))}
+                        {category.subLinks.map((subLink) => {
+                          const params = new URLSearchParams();
+                          params.set('category', category.label.toLowerCase());
+                          params.set('subcategory', subLink.label.toLowerCase());
+                          
+                          return (
+                            <Link
+                              key={subLink.label}
+                              href={`/?${params.toString()}`}
+                              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-emerald-500 dark:hover:text-emerald-400"
+                            >
+                              {subLink.label}
+                            </Link>
+                          );
+                        })}
                       </div>
                     )}
                   </div>

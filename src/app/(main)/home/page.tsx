@@ -33,13 +33,17 @@ export default async function HomePage() {
   }
 
   return (
-    <main className="flex w-full min-w-0 flex-col gap-5 lg:flex-row">
+    <main className="container mx-auto px-4 py-6">
       <PaymentNotification />
-      <div className="flex w-full min-w-0 flex-col gap-6 space-y-5 lg:flex-row">
-        <div>
-          <AuthenticatedNewsFeed />
+      <div className="w-full min-w-0 space-y-5">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="w-full lg:w-2/3 order-1">
+            <AuthenticatedNewsFeed />
+          </div>
+          <div className="w-full lg:w-1/3 order-2">
+            <NewsSidebar ads={ads} />
+          </div>
         </div>
-        <NewsSidebar ads={ads} />
       </div>
     </main>
   );
