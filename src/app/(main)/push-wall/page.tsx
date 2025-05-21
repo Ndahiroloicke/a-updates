@@ -217,11 +217,6 @@ function PushWallContent() {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="flex gap-6">
-        {/* Admin Sidebar - Left */}
-        <div className="hidden lg:block w-64 flex-shrink-0">
-          <AdminSidebar />
-        </div>
-
         {/* Main Content - Center */}
         <div className="flex-1">
           <div className="flex justify-between items-center mb-6">

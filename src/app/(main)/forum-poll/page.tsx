@@ -177,15 +177,6 @@ export default function ForumPollPage() {
                     Create a Poll
                   </Link>
                 </Button>
-                <Button asChild variant="outline" className="border-zinc-300 text-zinc-700 hover:bg-zinc-100">
-                  <Link href="/hot-polls">Hot Polls</Link>
-                </Button>
-                <Button asChild variant="outline" className="border-zinc-300 text-zinc-700 hover:bg-zinc-100">
-                  <Link href="/latest-forums">Latest Forums</Link>
-                </Button>
-                <Button asChild variant="outline" className="border-zinc-300 text-zinc-700 hover:bg-zinc-100">
-                  <Link href="/latest-polls">Latest Polls</Link>
-                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
