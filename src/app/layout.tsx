@@ -86,8 +86,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={workSans.variable}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${workSans.variable} antialiased`}>
         <NextSSRPlugin routerConfig={extractRouterConfig(fileRouter)} />
         <ReactQueryProvider>
           <ThemeProvider
@@ -97,7 +97,9 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <AdProvider>
-              <TranslationProvider>{children}</TranslationProvider>
+              <TranslationProvider>
+                {children}
+              </TranslationProvider>
             </AdProvider>
           </ThemeProvider>
         </ReactQueryProvider>

@@ -220,7 +220,7 @@ function PushWallContent() {
         {/* Main Content - Center */}
         <div className="flex-1">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Push Wall</h1>
+            <h1 className="text-2xl font-bold">Africa Wall</h1>
             <TranslationButton />
           </div>
           

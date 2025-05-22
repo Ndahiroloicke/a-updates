@@ -565,7 +565,7 @@ export default function AdminPage({ userInfo }: { userInfo: User }) {
               >
                 <Link href="/push-wall">
                   <Grid2X2 className="mr-2 h-4 w-4" />
-                  Push wall
+                  Africa wall
                 </Link>
               </Button>
               <Button

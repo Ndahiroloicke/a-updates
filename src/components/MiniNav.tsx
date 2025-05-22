@@ -20,9 +20,9 @@ export default function MiniNav() {
     { label: "Home", href: "/" },
     { label: "Posts", href: "/home"},
     { label: "Africa Wall", href: "/push-wall" },
-    { label: "Afro Videos", href: "/afro-video" },
-    { label: "Forumn & Poll", href: "/forum-poll" },
-    { label: "Stories", href: "/stories" },
+    { label: "Sasa", href: "/afro-video" },
+    { label: "Forum & Poll", href: "/forum-poll" },
+    { label: "Mambo", href: "/stories" },
   ]
 
   // Get categories and sub-links from Zustand store
