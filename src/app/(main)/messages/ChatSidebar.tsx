@@ -19,10 +19,9 @@ interface ChatSidebarProps {
 
 export default function ChatSidebar({ open, onClose }: ChatSidebarProps) {
   const { user } = useSession();
-
   const queryClient = useQueryClient();
-
   const { channel } = useChatContext();
+  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
 
   useEffect(() => {
     if (channel?.id) {
@@ -46,11 +45,31 @@ export default function ChatSidebar({ open, onClose }: ChatSidebarProps) {
   return (
     <div
       className={cn(
-        "size-full flex-col border-e md:flex md:w-72",
+        "h-full flex-col border-e md:flex md:w-72",
         open ? "flex" : "hidden",
       )}
     >
-      <MenuHeader onClose={onClose} />
+      <div className="flex items-center gap-3 p-2 border-b">
+        <Button
+          size="icon"
+          variant="ghost"
+          className="md:hidden"
+          onClick={onClose}
+        >
+          <X className="size-5" />
+        </Button>
+        <h1 className="text-xl font-bold">Messages</h1>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="ml-auto"
+          title="Start new chat"
+          onClick={() => setShowNewChatDialog(true)}
+        >
+          <MailPlus className="size-5" />
+        </Button>
+      </div>
+
       <ChannelList
         filters={{
           type: "messaging",
@@ -69,35 +88,7 @@ export default function ChatSidebar({ open, onClose }: ChatSidebarProps) {
         }}
         Preview={ChannelPreviewCustom}
       />
-    </div>
-  );
-}
 
-interface MenuHeaderProps {
-  onClose: () => void;
-}
-
-function MenuHeader({ onClose }: MenuHeaderProps) {
-  const [showNewChatDialog, setShowNewChatDialog] = useState(false);
-
-  return (
-    <>
-      <div className="flex items-center gap-3 p-2">
-        <div className="h-full md:hidden">
-          <Button size="icon" variant="ghost" onClick={onClose}>
-            <X className="size-5" />
-          </Button>
-        </div>
-        <h1 className="me-auto text-xl font-bold md:ms-2">Messages</h1>
-        <Button
-          size="icon"
-          variant="ghost"
-          title="Start new chat"
-          onClick={() => setShowNewChatDialog(true)}
-        >
-          <MailPlus className="size-5" />
-        </Button>
-      </div>
       {showNewChatDialog && (
         <NewChatDialog
           onOpenChange={setShowNewChatDialog}
@@ -107,6 +98,6 @@ function MenuHeader({ onClose }: MenuHeaderProps) {
           }}
         />
       )}
-    </>
+    </div>
   );
 }

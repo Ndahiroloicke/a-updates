@@ -12,7 +12,8 @@ const nextConfig = {
       'j1384sfojb.ufs.sh',
       'example.com',
       'your-other-domain.com',
-      'j1384sfojb.ufs.sh'
+      'j1384sfojb.ufs.sh',
+      'lh3.googleusercontent.com'
     ],
     remotePatterns: [
       {
