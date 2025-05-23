@@ -1,0 +1,516 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://neondb_owner:npg_8Dby7CrnIKPX@ep-plain-darkness-a22pbk2t-pooler.eu-central-1.aws.neon.tech/neondb?sslmode=require"
+}
+
+model paymentSession {
+  id              String          @id @default(cuid())
+  userId          String
+  paymentIntentId String          @unique
+  createdAt       DateTime        @default(now())
+  paymentMethod   String
+  status          String
+  Advertisement   Advertisement[]
+  user            User            @relation("UserPayments", fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model User {
+  id                    String             @id
+  username              String             @unique
+  displayName           String
+  email                 String?            @unique
+  passwordHash          String?
+  googleId              String?            @unique
+  avatarUrl             String?
+  bio                   String?
+  role                  Role               @default(USER)
+  createdAt             DateTime           @default(now())
+  hasPaid               Boolean?           @default(false)
+  publisherPackage      String?
+  Advertisement         Advertisement[]
+  AdvertiserProfile     AdvertiserProfile?
+  bookmarks             Bookmark[]
+  comments              Comment[]
+  following             Follow[]           @relation("Following")
+  followers             Follow[]           @relation("Followers")
+  likes                 Like[]
+  issuedNotifications   Notification[]     @relation("Issuer")
+  receivedNotifications Notification[]     @relation("Recipient")
+  payments              paymentSession[]   @relation("UserPayments")
+  polls                 Poll[]
+  posts                 Post[]
+  PublisherProfile      PublisherProfile?
+  PublisherRequest      PublisherRequest[]
+  sessions              Session[]
+  Story                 Story[]
+  Vote                  Vote[]
+  SubAdmin              SubAdmin?
+  afroVideos            AfroVideo[] // Add relation to AfroVideo model
+  retweets              AfroVideoRetweet[]  // Add this line
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id
+  userId    String
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  follower    User   @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User   @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+model Post {
+  id                  String         @id @default(cuid())
+  title               String
+  description         String
+  body                String?
+  userId              String
+  category            Category?
+  createdAt           DateTime       @default(now())
+  role                Role?
+  type                String         @default("POST")
+  pollId              String?        @unique
+  bookmarks           Bookmark[]
+  comments            Comment[]
+  likes               Like[]
+  linkedNotifications Notification[]
+  attachments         Media[]
+  poll                Poll?          @relation(fields: [pollId], references: [id])
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("posts")
+}
+
+model Story {
+  id                  String         @id @default(cuid())
+  title               String
+  description         String
+  userId              String
+  createdAt           DateTime       @default(now())
+  mediaId             String
+  bookmarks           Bookmark[]
+  comments            Comment[]
+  likes               Like[]
+  linkedNotifications Notification[]
+  attachments         Media          @relation("StoryThumbnail", fields: [mediaId], references: [id])
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media               Media[]        @relation("StoryMedia")
+
+  @@map("story")
+}
+
+model Media {
+  id            String          @id @default(cuid())
+  postId        String?
+  type          MediaType
+  url           String
+  createdAt     DateTime        @default(now())
+  Advertisement Advertisement[]
+  post          Post?           @relation(fields: [postId], references: [id])
+  Story         Story[]         @relation("StoryThumbnail")
+  storyMedia    Story[]         @relation("StoryMedia")
+
+  @@map("post_media")
+}
+
+model AfroVideo {
+  id           String    @id @default(cuid())
+  title        String
+  description  String
+  videoUrl     String
+  thumbnailUrl String?
+  userId       String // Only admin users can upload
+  createdAt    DateTime  @default(now())
+  views        Int       @default(0)
+  shares       Int       @default(0)
+  comments     Comment[] // Reusing existing Comment model
+  likes        Like[] // Reusing existing Like model
+  reposted     Boolean   @default(false)
+  reposts      Int       @default(0)
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category     Category?
+  duration     Int? // Video duration in seconds
+  retweets     AfroVideoRetweet[]
+
+  @@map("afro_videos")
+}
+
+model AfroVideoRetweet {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String
+  videoId   String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     AfroVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoId])
+  @@index([videoId])
+  @@index([userId])
+}
+
+model Comment {
+  id          String     @id @default(cuid())
+  content     String
+  userId      String
+  postId      String?
+  storyId     String?
+  createdAt   DateTime   @default(now())
+  afroVideoId String? // Add field for AfroVideo relation
+  post        Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  story       Story?     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  afroVideo   AfroVideo? @relation(fields: [afroVideoId], references: [id], onDelete: Cascade) // Add relation to AfroVideo
+
+  @@map("comments")
+}
+
+model Like {
+  id          String     @id @default(cuid())
+  userId      String
+  postId      String?
+  storyId     String?
+  afroVideoId String? // Add field for AfroVideo relation
+  post        Post?      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  story       Story?     @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  afroVideo   AfroVideo? @relation(fields: [afroVideoId], references: [id], onDelete: Cascade) // Add relation to AfroVideo
+
+  @@unique([userId, postId, storyId, afroVideoId])
+  @@unique([userId, postId], name: "userId_postId")
+  @@map("likes")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String?
+  storyId   String?
+  createdAt DateTime @default(now())
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  story     Story?   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@map("bookmarks")
+}
+
+model Link {
+  id        String   @id @default(cuid())
+  title     String
+  url       String
+  category  String
+  createdAt DateTime @default(now())
+
+  @@map("links")
+}
+
+model Notification {
+  id                 String            @id @default(cuid())
+  recipientId        String
+  issuerId           String
+  postId             String?
+  storyId            String?
+  type               NotificationType
+  read               Boolean           @default(false)
+  body               String?
+  createdAt          DateTime          @default(now())
+  publisherRequestId String?
+  issuer             User              @relation("Issuer", fields: [issuerId], references: [id], onDelete: Cascade)
+  post               Post?             @relation(fields: [postId], references: [id], onDelete: Cascade)
+  publisherRequest   PublisherRequest? @relation(fields: [publisherRequestId], references: [id], onDelete: Cascade)
+  recipient          User              @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  story              Story?            @relation(fields: [storyId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model PublisherRequest {
+  id           String         @id @default(cuid())
+  userId       String
+  status       RequestStatus
+  requestedAt  DateTime       @default(now())
+  respondedAt  DateTime?
+  message      String?
+  Notification Notification[]
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("publisher_requests")
+}
+
+model PublisherProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  firstName             String
+  lastName              String
+  workPhone             String
+  cellPhone             String?
+  address               String
+  city                  String
+  stateProvince         String
+  country               String
+  postalCode            String
+  companyName           String
+  socialMedia           String?
+  pressReleaseFrequency String
+  productsOfInterest    String[]
+  bestTimeToReach       String
+  additionalInfo        String?
+  paymentType           String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id])
+
+  @@map("publisher_profiles")
+}
+
+model AdvertiserProfile {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  firstName             String
+  lastName              String
+  workPhone             String
+  cellPhone             String
+  address               String
+  city                  String
+  stateProvince         String
+  country               String
+  postalCode            String
+  organization          String
+  socialMedia           String?
+  advertisementType     String
+  advertisementLocation String[]
+  bestTimeToReach       String?
+  additionalInfo        String?
+  paymentType           String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id])
+
+  @@map("advertiser_profiles")
+}
+
+model Advertisement {
+  id               String          @id @default(cuid())
+  name             String
+  location         String
+  type             String
+  mediaId          String
+  userId           String
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  dimensions       Json
+  duration         Int
+  durationType     AdDurationType
+  endDate          DateTime
+  isApproved       Boolean         @default(false)
+  isPaid           Boolean         @default(false)
+  price            Float
+  region           AdRegion
+  startDate        DateTime
+  targetUrl        String?
+  virusScanStatus  String          @default("pending")
+  status           AdStatus
+  format           AdFormat
+  paymentSessionId String?
+  placement        AdPlacement
+  media            Media           @relation(fields: [mediaId], references: [id])
+  paymentSession   paymentSession? @relation(fields: [paymentSessionId], references: [id])
+  user             User            @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([mediaId])
+}
+
+model Subscriber {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  subscribedAt DateTime @default(now())
+  active       Boolean  @default(true)
+
+  @@map("subscribers")
+}
+
+model Poll {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  userId      String
+  options     Option[]
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post        Post?
+
+  @@index([userId])
+  @@map("polls")
+}
+
+model Option {
+  id        String   @id @default(cuid())
+  title     String
+  pollId    String
+  createdAt DateTime @default(now())
+  poll      Poll     @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+
+  @@index([pollId])
+  @@map("poll_options")
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  optionId  String
+  createdAt DateTime @default(now())
+  option    Option   @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, optionId])
+  @@index([userId])
+  @@index([optionId])
+  @@map("votes")
+}
+
+model AdPricingRule {
+  id           String         @id @default(cuid())
+  region       AdRegion
+  position     String
+  durationType AdDurationType
+  basePrice    Float
+  multiplier   Float
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model SubAdmin {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  subRole     String
+  permissions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("sub_admins")
+}
+
+enum Role {
+  USER
+  PUBLISHER
+  ADMIN
+  SUB_ADMIN
+}
+
+enum Category {
+  POLITICS
+  BUSINESS
+  TECHNOLOGY
+  SCIENCE
+  HEALTH
+  SPORTS
+  ENTERTAINMENT
+  LIFESTYLE
+  WORLD
+  EDUCATION
+  ENVIRONMENT
+  TRAVEL
+  FOOD
+  FASHION
+  ART
+  CULTURE
+  RELIGION
+  CRIME
+  OPINION
+  ANALYSIS
+  LOCAL
+  NATIONAL
+  GLOBAL
+  HISTORY
+  WEATHER
+  FINANCE
+  REAL_ESTATE
+  STARTUPS
+  AUTOMOTIVE
+  CAREER
+  LAW
+  PHOTOGRAPHY
+  VIDEOGRAPHY
+  ANIMALS
+  AGRICULTURE
+  GAMING
+  CELEBRITY
+  CORPORATE_MEDIA
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum NotificationType {
+  LIKE
+  FOLLOW
+  COMMENT
+  BECOME_PUBLISHER
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AdRegion {
+  LOCAL
+  MULTI_COUNTRY
+  ALL_AFRICA
+}
+
+enum AdStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  REJECTED
+}
+
+enum AdDurationType {
+  MINUTES
+  HOURS
+  DAYS
+  WEEKS
+  MONTHS
+}
+
+enum AdPlacement {
+  RIGHT_COLUMN_TOP
+  RIGHT_COLUMN_MIDDLE
+  RIGHT_COLUMN_BOTTOM
+  BELOW_FOOTER
+  IN_FEED
+  FULL_PAGE_TAKEOVER
+}
+
+enum AdFormat {
+  BANNER
+  SIDEBAR
+  IN_FEED
+  FULL_PAGE
+  MOBILE
+}
