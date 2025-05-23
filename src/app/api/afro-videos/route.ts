@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const cursor = req.nextUrl.searchParams.get("cursor") || undefined;
     const pageSize = 10;
     
-    // Get videos with all necessary relations
+    // Get videos with all necessary relations including retweets
     const videos = await prisma.afroVideo.findMany({
       include: {
         user: {
@@ -22,7 +22,24 @@ export async function GET(req: NextRequest) {
           select: {
             likes: true,
             comments: true,
+            retweets: true,
           },
+        },
+        retweets: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                displayName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          take: 1, // Get the most recent retweet
         },
       },
       orderBy: { createdAt: "desc" },

@@ -52,6 +52,7 @@ model User {
   Vote                  Vote[]
   SubAdmin              SubAdmin?
   afroVideos            AfroVideo[] // Add relation to AfroVideo model
+  retweets              AfroVideoRetweet[]  // Add this line
 
   @@map("users")
 }
@@ -146,8 +147,23 @@ model AfroVideo {
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   category     Category?
   duration     Int? // Video duration in seconds
+  retweets     AfroVideoRetweet[]
 
   @@map("afro_videos")
+}
+
+model AfroVideoRetweet {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  userId    String
+  videoId   String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video     AfroVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, videoId])
+  @@index([videoId])
+  @@index([userId])
 }
 
 model Comment {
